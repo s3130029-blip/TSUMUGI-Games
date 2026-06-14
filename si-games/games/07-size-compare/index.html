@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おおきさくらべ</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    .size-row {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .size-opt {
+      background: #fff;
+      border: 4px solid #ffe082;
+      border-radius: 20px;
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 110px;
+      min-height: 110px;
+      box-shadow: 0 3px 8px rgba(0,0,0,.07);
+      transition: transform .1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .size-opt:active { transform: scale(.92); }
+    .size-opt.ok { border-color: #66bb6a; background: #e8f5e9; pointer-events: none; }
+    .size-opt.ng { border-color: #ef5350; background: #ffebee; }
+    .size-opt.off{ pointer-events: none; opacity: .55; }
+  </style>
+</head>
+<body>
+  <div class="g-header">
+    <a href="../../index.html" class="back-a">🏠</a>
+    <span class="g-title">📏 おおきさくらべ</span>
+    <span class="g-prog" id="prog">1 / 5</span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="fill" style="width:0%"></div></div>
+
+  <div id="ga">
+    <div class="g-body">
+      <div class="q-label" id="label">おおきいほうをタップ！</div>
+      <div class="size-row" id="opts"></div>
+    </div>
+  </div>
+  <div class="result" id="result"></div>
+
+  <script>
+    // Each round: same emoji at 2 sizes. biggerIdx = index (0 or 1) of the bigger one.
+    const Q = [
+      { emoji:'🐘', sizes:['5rem','2.2rem'], biggerIdx:0 },
+      { emoji:'🍎', sizes:['2rem','5rem'],   biggerIdx:1 },
+      { emoji:'⭐', sizes:['5rem','2.2rem'], biggerIdx:0 },
+      { emoji:'🚗', sizes:['2rem','5rem'],   biggerIdx:1 },
+      { emoji:'🌸', sizes:['5rem','2rem'],   biggerIdx:0 },
+    ];
+    let cur = 0, score = 0;
+
+    function beep(ok) {
+      try {
+        const A = new (window.AudioContext || window.webkitAudioContext)();
+        const o = A.createOscillator(), g = A.createGain();
+        o.connect(g); g.connect(A.destination);
+        if (ok) {
+          [523,659,784].forEach((f,i) => o.frequency.setValueAtTime(f, A.currentTime + i*.12));
+          g.gain.setValueAtTime(.22, A.currentTime);
+          g.gain.exponentialRampToValueAtTime(.001, A.currentTime + .6);
+          o.start(); o.stop(A.currentTime + .6);
+        } else {
+          o.frequency.setValueAtTime(260, A.currentTime);
+          o.frequency.setValueAtTime(190, A.currentTime + .18);
+          g.gain.setValueAtTime(.22, A.currentTime);
+          g.gain.exponentialRampToValueAtTime(.001, A.currentTime + .36);
+          o.start(); o.stop(A.currentTime + .36);
+        }
+      } catch(e) {}
+    }
+
+    function render() {
+      const q = Q[cur];
+      document.getElementById('prog').textContent = (cur+1) + ' / ' + Q.length;
+      document.getElementById('fill').style.width  = (cur / Q.length * 100) + '%';
+      const opts = document.getElementById('opts');
+      opts.innerHTML = '';
+      q.sizes.forEach((sz, i) => {
+        const b = document.createElement('button');
+        b.className = 'size-opt';
+        b.innerHTML = `<span style="font-size:${sz}">${q.emoji}</span>`;
+        b.onclick = () => pick(b, i === q.biggerIdx);
+        opts.appendChild(b);
+      });
+    }
+
+    function pick(btn, ok) {
+      document.querySelectorAll('.size-opt').forEach(b => b.classList.add('off'));
+      btn.classList.remove('off');
+      btn.classList.add(ok ? 'ok' : 'ng', ok ? 'anim-b' : 'anim-s');
+      if (ok) score++;
+      beep(ok);
+      setTimeout(() => { cur++; cur < Q.length ? render() : showResult(); }, 900);
+    }
+
+    function showResult() {
+      document.getElementById('ga').style.display = 'none';
+      const r = document.getElementById('result');
+      r.classList.add('on');
+      const n = Q.length;
+      const s = score >= n ? '⭐⭐⭐' : score >= Math.ceil(n*.6) ? '⭐⭐' : '⭐';
+      const e = score >= n ? '🎉' : score >= Math.ceil(n*.6) ? '😄' : '😊';
+      const t = score >= n ? 'かんぺき！' : score >= Math.ceil(n*.6) ? 'よくできました！' : 'もういちどやってみよう！';
+      r.innerHTML = `<div class="r-emoji">${e}</div><div class="r-title">${t}</div><div class="r-stars">${s}</div><div class="r-score">${score} / ${n} もんせいかい</div><button class="btn-p" onclick="restart()">もういちど ▶</button><a href="../../index.html" class="btn-s">🏠 ホームへ</a>`;
+    }
+
+    function restart() {
+      cur = 0; score = 0;
+      document.getElementById('ga').style.display = '';
+      const r = document.getElementById('result');
+      r.classList.remove('on'); r.innerHTML = '';
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
