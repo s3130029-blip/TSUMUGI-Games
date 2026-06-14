@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>なにがきえた？</title>
+  <link rel="stylesheet" href="../../style.css">
+  <style>
+    .show-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      font-size: 3.6rem;
+      background: #fff;
+      border: 4px solid #ffe082;
+      border-radius: 20px;
+      padding: 16px 24px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.07);
+    }
+    #countdown {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #ff7043;
+    }
+  </style>
+</head>
+<body>
+  <div class="g-header">
+    <a href="../../index.html" class="back-a">🏠</a>
+    <span class="g-title">❓ なにがきえた？</span>
+    <span class="g-prog" id="prog">1 / 5</span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="fill" style="width:0%"></div></div>
+
+  <div id="ga">
+    <div class="g-body">
+      <div class="q-label" id="label">よくおぼえてね！</div>
+      <div class="show-row" id="show-row"></div>
+      <div id="countdown"></div>
+      <div class="opts-3" id="opts" style="display:none"></div>
+    </div>
+  </div>
+  <div class="result" id="result"></div>
+
+  <script src="../../common.js"></script>
+  <script>
+    const Q = [
+      { show:['🍎','🍊','🍋'], hide:'🍊', opts:['🍎','🍊','🍋'] },
+      { show:['🐱','🐶','🐭'], hide:'🐱', opts:['🐱','🐶','🐭'] },
+      { show:['⭐','🌙','☀️'], hide:'☀️', opts:['⭐','🌙','☀️'] },
+      { show:['🚗','🚌','✈️'], hide:'🚌', opts:['🚗','🚌','✈️'] },
+      { show:['🔴','🔵','🟡'], hide:'🟡', opts:['🔴','🔵','🟡'] },
+    ];
+    let cur = 0, score = 0;
+
+    function render() {
+      const q = Q[cur];
+      document.getElementById('prog').textContent = (cur+1) + ' / ' + Q.length;
+      document.getElementById('fill').style.width  = (cur / Q.length * 100) + '%';
+      document.getElementById('label').textContent = 'よくおぼえてね！';
+      document.getElementById('opts').style.display = 'none';
+      document.getElementById('countdown').textContent = '';
+
+      const row = document.getElementById('show-row');
+      row.textContent = '';
+      q.show.forEach(v => { const s = document.createElement('span'); s.textContent = v; row.appendChild(s); });
+      row.style.display = 'flex';
+
+      // countdown 3→2→1 then hide
+      let count = 3;
+      const cd = document.getElementById('countdown');
+      cd.textContent = count;
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) { cd.textContent = count; }
+        else {
+          clearInterval(timer);
+          cd.textContent = '';
+          row.style.display = 'none';
+          document.getElementById('label').textContent = 'きえたのはどれ？';
+          showOpts(q);
+        }
+      }, 1000);
+    }
+
+    function showOpts(q) {
+      const opts = document.getElementById('opts');
+      opts.innerHTML = '';
+      opts.style.display = 'grid';
+      q.opts.forEach(v => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = v;
+        b.onclick = () => pick(b, v === q.hide);
+        opts.appendChild(b);
+      });
+    }
+
+    function pick(btn, ok) {
+      document.querySelectorAll('.opt').forEach(b => b.classList.add('off'));
+      btn.classList.remove('off');
+      btn.classList.add(ok ? 'ok' : 'ng', ok ? 'anim-b' : 'anim-s');
+      if (ok) { score++; SIAsobi.burst(btn); SIAsobi.correct(); } else SIAsobi.wrong();
+      setTimeout(() => { cur++; cur < Q.length ? render() : showResult(); }, 900);
+    }
+
+    function showResult() {
+      document.getElementById('ga').style.display = 'none';
+      const r = document.getElementById('result');
+      r.classList.add('on');
+      const n = Q.length;
+      const s = score >= n ? '⭐⭐⭐' : score >= Math.ceil(n*.6) ? '⭐⭐' : '⭐';
+      const e = score >= n ? '🎉' : score >= Math.ceil(n*.6) ? '😄' : '😊';
+      const t = score >= n ? 'かんぺき！' : score >= Math.ceil(n*.6) ? 'よくできました！' : 'もういちどやってみよう！';
+      r.innerHTML = `<div class="r-emoji">${e}</div><div class="r-title">${t}</div><div class="r-stars">${s}</div><div class="r-score">${score} / ${n} もんせいかい</div><button class="btn-p" onclick="restart()">もういちど ▶</button><a href="../../index.html" class="btn-s">🏠 ホームへ</a>`;
+    }
+
+    function restart() {
+      cur = 0; score = 0;
+      document.getElementById('ga').style.display = '';
+      const r = document.getElementById('result');
+      r.classList.remove('on'); r.innerHTML = '';
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>

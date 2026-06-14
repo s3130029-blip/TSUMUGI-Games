@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>なかまはずれ</title>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <div class="g-header">
+    <a href="../../index.html" class="back-a">🏠</a>
+    <span class="g-title">🔍 なかまはずれ</span>
+    <span class="g-prog" id="prog">1 / 5</span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="fill" style="width:0%"></div></div>
+
+  <div id="ga">
+    <div class="g-body">
+      <div class="q-label" id="hint"></div>
+      <div class="opts-4" id="opts"></div>
+    </div>
+  </div>
+  <div class="result" id="result"></div>
+
+  <script src="../../common.js"></script>
+  <script>
+    const Q = [
+      { items:['🐱','🐶','🐭','🍎'], odd:'🍎', hint:'どうぶつじゃないのはどれ？' },
+      { items:['🍎','🍊','🍋','🚗'], odd:'🚗', hint:'くだものじゃないのはどれ？' },
+      { items:['🚗','🚌','✈️','🌸'], odd:'🌸', hint:'のりものじゃないのはどれ？' },
+      { items:['🌸','🌺','🌻','🐘'], odd:'🐘', hint:'おはなじゃないのはどれ？'  },
+      { items:['🔴','🔵','🟡','🐸'], odd:'🐸', hint:'まるいいろじゃないのはどれ？' },
+    ];
+    let cur = 0, score = 0;
+
+    function render() {
+      const q = Q[cur];
+      document.getElementById('hint').textContent  = q.hint;
+      document.getElementById('prog').textContent  = (cur+1) + ' / ' + Q.length;
+      document.getElementById('fill').style.width  = (cur / Q.length * 100) + '%';
+      const opts = document.getElementById('opts');
+      opts.innerHTML = '';
+      q.items.forEach(v => {
+        const b = document.createElement('button');
+        b.className = 'opt'; b.textContent = v;
+        b.onclick = () => pick(b, v === q.odd);
+        opts.appendChild(b);
+      });
+    }
+
+    function pick(btn, ok) {
+      document.querySelectorAll('.opt').forEach(b => b.classList.add('off'));
+      btn.classList.remove('off');
+      btn.classList.add(ok ? 'ok' : 'ng', ok ? 'anim-b' : 'anim-s');
+      if (ok) { score++; SIAsobi.burst(btn); SIAsobi.correct(); } else SIAsobi.wrong();
+      setTimeout(() => { cur++; cur < Q.length ? render() : showResult(); }, 900);
+    }
+
+    function showResult() {
+      document.getElementById('ga').style.display = 'none';
+      const r = document.getElementById('result');
+      r.classList.add('on');
+      const n = Q.length;
+      const s = score >= n ? '⭐⭐⭐' : score >= Math.ceil(n*.6) ? '⭐⭐' : '⭐';
+      const e = score >= n ? '🎉' : score >= Math.ceil(n*.6) ? '😄' : '😊';
+      const t = score >= n ? 'かんぺき！' : score >= Math.ceil(n*.6) ? 'よくできました！' : 'もういちどやってみよう！';
+      r.innerHTML = `<div class="r-emoji">${e}</div><div class="r-title">${t}</div><div class="r-stars">${s}</div><div class="r-score">${score} / ${n} もんせいかい</div><button class="btn-p" onclick="restart()">もういちど ▶</button><a href="../../index.html" class="btn-s">🏠 ホームへ</a>`;
+    }
+
+    function restart() {
+      cur = 0; score = 0;
+      document.getElementById('ga').style.display = '';
+      const r = document.getElementById('result');
+      r.classList.remove('on'); r.innerHTML = '';
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
