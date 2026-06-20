@@ -258,6 +258,16 @@ body {
   gap: 10px;
 }
 
+/* パネル内のカテゴリ見出し(グリッド全幅) */
+.panel-section {
+  grid-column: 1 / -1;
+  font-size: 14px;
+  font-weight: 800;
+  color: #999;
+  padding: 8px 4px 0;
+}
+.panel-section:first-child { padding-top: 0; }
+
 /* パネル内アイテム(スタンプ/ぬりえ/はいけい) */
 .pitem {
   aspect-ratio: 1;

@@ -5,7 +5,7 @@
    ・色 / 太さ はポップアップで選ぶ(描画スペースを最大化)
    ============================================================ */
 
-import { COLORS, SIZES, STAMPS, BACKGROUNDS, TEMPLATES, TOOLS } from './data.js';
+import { COLORS, SIZES, STAMPS, STAMP_GROUPS, BACKGROUNDS, TEMPLATES, TOOLS } from './data.js';
 import { Layers } from './canvas.js';
 import { History } from './history.js';
 import { bucketFill } from './fill.js';
@@ -202,9 +202,12 @@ function buildSizeBody() {
   }
 }
 
-// スタンプ
+// スタンプ(カテゴリ別)
 function buildStampBody() {
   const body = panelBody();
+
+  // おまかせ(ランダム)
+  stampHeader(body, 'おまかせ');
   const rnd = document.createElement('button');
   rnd.className = 'pitem' + (state.randomStamp ? ' selected' : '');
   rnd.innerHTML = '🎲';
@@ -216,18 +219,29 @@ function buildStampBody() {
   });
   body.appendChild(rnd);
 
-  for (const s of STAMPS) {
-    const b = document.createElement('button');
-    b.className = 'pitem' + (!state.randomStamp && state.stamp === s ? ' selected' : '');
-    b.textContent = s;
-    b.addEventListener('click', () => {
-      state.stamp = s;
-      state.randomStamp = false;
-      sound.pop();
-      closePanel();
-    });
-    body.appendChild(b);
+  // カテゴリごとに見出し + スタンプ
+  for (const group of STAMP_GROUPS) {
+    stampHeader(body, group.label);
+    for (const s of group.items) {
+      const b = document.createElement('button');
+      b.className = 'pitem' + (!state.randomStamp && state.stamp === s ? ' selected' : '');
+      b.textContent = s;
+      b.addEventListener('click', () => {
+        state.stamp = s;
+        state.randomStamp = false;
+        sound.pop();
+        closePanel();
+      });
+      body.appendChild(b);
+    }
   }
+}
+
+function stampHeader(body, label) {
+  const h = document.createElement('div');
+  h.className = 'panel-section';
+  h.textContent = label;
+  body.appendChild(h);
 }
 
 // ぬりえ
