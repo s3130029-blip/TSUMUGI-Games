@@ -1,12 +1,15 @@
 // 画面遷移の統括＋セーブの簡易ストア（フェーズ3）。
 // セーブは起動時に1回ロードして保持し、ガチャでの取得を localStorage に反映する。
 import { loadSave, recordCollect, saveSave, type SaveData } from "../core/save";
+import { setSoundEnabled } from "../audio/sfx";
 import { mountGachaScreen } from "./gacha-screen";
 import { mountZukanScreen } from "./zukan-screen";
 
 export function startApp(root: HTMLElement): void {
   // 現在のセーブ（破損・未保存時は既定値にフォールバックされる）。
   let save: SaveData = loadSave();
+  // 起動時に効果音 ON/OFF 設定を反映する（フェーズ5）。
+  setSoundEnabled(save.settings.soundEnabled);
 
   /** ガチャ結果を記録して永続化し、初回判定と取得後の個数を返す。 */
   function collect(itemId: string): { isNew: boolean; count: number } {

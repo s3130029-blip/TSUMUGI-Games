@@ -8,6 +8,7 @@ import type { ItemDef } from "../data/items";
 import { burstSparkles } from "./effects/sparkle";
 import { eggSvgMarkup } from "./svg-egg";
 import { must } from "./dom";
+import { playSfx } from "../audio/sfx";
 
 /** 演出の進行状態。idle のときだけ次のガチャを受け付ける（連打対策）。 */
 type Phase = "idle" | "playing" | "result";
@@ -68,6 +69,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   async function play(): Promise<void> {
     if (phase !== "idle") return; // 演出中・結果中のタップは無視（破綻防止）
     setPhase("playing");
+    playSfx("tap"); // ① タップの手応え（音）
     result.replaceChildren();
     sparkles.replaceChildren();
     hint.textContent = "";
@@ -102,12 +104,17 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
     eggTop.classList.add("is-open");
     eggBottom.classList.add("is-open");
     flash.classList.add("is-flash");
+    playSfx("open"); // ④ パカッの音
     if (!prefersReduced) burstSparkles(sparkles, rng, fx.sparkleCount, fx.sparkleVariant);
     await sleep(t.open);
     flash.classList.remove("is-flash");
 
     // ⑤⑥ 登場（バウンド）＋キラキラ。ここで図鑑へ記録・永続化する（フェーズ3）。
     const collected = opts.onCollect(item.id);
+    // ⑥ キラキラ音。レアなら専用ジングルを重ねて「やった！」を強める（REQUIREMENTS.md 4.2）。
+    playSfx("sparkle");
+    if (item.rarity === "rare") playSfx("rareJingle");
+    else if (item.rarity === "superRare") playSfx("superJingle");
     showResult(item, fx, collected);
     await sleep(t.reveal);
 

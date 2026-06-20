@@ -65,3 +65,9 @@ export const SPEECH_RATE = {
   ja: 0.95,
   en: 0.85,
 } as const;
+
+/**
+ * 効果音（Web Audio 合成音）のマスター音量（0〜1）。フェーズ5。
+ * 子ども向けに耳に痛くない控えめな既定値。各音はこの値を基準に鳴らす。
+ */
+export const SFX_MASTER_GAIN = 0.18;
