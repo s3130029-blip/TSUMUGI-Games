@@ -41,6 +41,7 @@ function init() {
   history.onChange = updateUndoRedo;
   history.reset();
 
+  lockGestures();
   bindPointer();
   bindButtons();
   selectTool('pen');
@@ -289,6 +290,23 @@ function buildBackgroundBody() {
     });
     body.appendChild(b);
   }
+}
+
+// ---------- ブラウザのジェスチャー抑制(誤操作対策) ----------
+// ※ iOS本体のスワイプ(下/上からのコントロールセンター・Dock・アプリ切替)は
+//    Webからは止められません。完全に止めるには「アクセスガイド」を使ってください。
+function lockGestures() {
+  // ピンチ拡大(Safari独自イベント)を無効化
+  for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(ev, (e) => e.preventDefault(), { passive: false });
+  }
+  // ページのスクロール/バウンドを無効化(パネル内の縦スクロールだけ許可)
+  document.addEventListener('touchmove', (e) => {
+    if (e.target && e.target.closest && e.target.closest('.panel-body')) return;
+    e.preventDefault();
+  }, { passive: false });
+  // 長押しメニューを無効化
+  document.addEventListener('contextmenu', (e) => e.preventDefault());
 }
 
 // ---------- ポインタ(描画) ----------

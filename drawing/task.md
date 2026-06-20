@@ -62,4 +62,27 @@
 - [x] css: シーンサムネイル + ラベル
 - [x] service-worker.js: scenes.js を追加しキャッシュ更新
 - [x] 構文チェック / scenes.js 実行検証 / SVG妥当性チェック
-- [ ] ブラウザでの見た目確認 → GitHub へ反映
+- [x] GitHub へ反映（c89acc2）
+
+---
+
+# 追加タスク（2026-06-20）: iPad の誤操作対策
+
+## 要望
+- お絵描き中に2〜3本指スワイプ・下/上からのスワイプで中断してしまう。
+- ホームボタン機なので iOS のスワイプ機能は無効化されても良い。
+
+## 対策（2系統）
+### アプリ側（実装）
+- [x] body を position:fixed にしてラバーバンド(引っぱり)を停止
+- [x] ピンチ拡大(gesturestart等)を preventDefault
+- [x] touchmove を抑制（パネル内の縦スクロールだけ pan-y で許可）
+- [x] 長押しメニュー(callout/contextmenu)を抑制
+- [x] service-worker キャッシュ v4
+- [x] 構文チェック
+
+### iOS 側（ユーザー操作・READMEに手順追記）
+- Web では止められないシステムスワイプ（コントロールセンター/Dock/アプリ切替）対策。
+- 「アクセスガイド」+「ホーム画面に追加」を案内。
+- [x] README に手順を追記
+- [ ] GitHub へ反映
