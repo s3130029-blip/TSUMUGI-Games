@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <!-- iPad での操作性重視: 拡大・スクロールを無効化 -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#ffd166" />
+  <title>おえかき - こども お絵描き</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 上部ツールバー: もどる・やりなおし・ぜんけし・ほぞん など -->
+    <header id="topbar">
+      <div class="brand">🎨 おえかき</div>
+      <div class="actions">
+        <button class="btn action" data-action="undo" title="もどる" aria-label="もどる">
+          <span class="ico">↩️</span><span class="lbl">もどる</span>
+        </button>
+        <button class="btn action" data-action="redo" title="やりなおし" aria-label="やりなおし">
+          <span class="ico">↪️</span><span class="lbl">やりなおし</span>
+        </button>
+        <button class="btn action" data-action="clear" title="ぜんけし" aria-label="ぜんけし">
+          <span class="ico">🗑️</span><span class="lbl">ぜんけし</span>
+        </button>
+        <button class="btn action save" data-action="save" title="ほぞん" aria-label="ほぞん">
+          <span class="ico">💾</span><span class="lbl">ほぞん</span>
+        </button>
+        <button class="btn action" data-action="sound" title="おと" aria-label="おと">
+          <span class="ico">🔊</span><span class="lbl">おと</span>
+        </button>
+        <button class="btn action" data-action="fullscreen" title="ぜんがめん" aria-label="ぜんがめん">
+          <span class="ico">⛶</span><span class="lbl">ぜんがめん</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- お絵描きエリア: 3レイヤー構成 -->
+    <main id="stage">
+      <canvas id="bg-layer"></canvas>      <!-- 背景 -->
+      <canvas id="draw-layer"></canvas>    <!-- ユーザーの絵 -->
+      <canvas id="overlay-layer"></canvas> <!-- ぬりえの線画(上に重ねる) -->
+    </main>
+
+    <!-- ポップアップ パネル(スタンプ/ぬりえ/はいけい) -->
+    <section id="panel" class="panel hidden" aria-hidden="true">
+      <div class="panel-head">
+        <span id="panel-title">スタンプ</span>
+        <button class="btn panel-close" data-action="close-panel" aria-label="とじる">✕</button>
+      </div>
+      <div id="panel-body" class="panel-body"></div>
+    </section>
+
+    <!-- 下部ツールバー: ツール・いろ・ふとさ -->
+    <footer id="bottombar">
+      <div class="tools" id="tools"></div>
+      <div class="palette" id="palette"></div>
+      <div class="sizes" id="sizes"></div>
+    </footer>
+  </div>
+
+  <!-- かくにん用 モーダル -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <p id="modal-text">ぜんぶ けしても いい？</p>
+      <div class="modal-btns">
+        <button class="btn modal-yes" data-action="modal-yes">はい</button>
+        <button class="btn modal-no" data-action="modal-no">いいえ</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

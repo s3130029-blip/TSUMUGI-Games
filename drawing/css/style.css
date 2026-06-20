@@ -1,0 +1,279 @@
+/* ============================================================
+   こども おえかき  -  スタイル
+   - 大きなボタン / カラフル / iPad(縦・横) 対応
+   ============================================================ */
+
+:root {
+  --bg: #fff7e6;
+  --bar: #ffffff;
+  --ink: #3a3a4a;
+  --accent: #ff8fb1;
+  --accent2: #ffd166;
+  --good: #34d399;
+  --shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+  --radius: 18px;
+  --btn-size: 64px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", "Segoe UI", system-ui, sans-serif;
+  touch-action: none;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ---------- 上部バー ---------- */
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: calc(6px + var(--safe-top)) 12px 6px;
+  background: var(--bar);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 5;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+#topbar .actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---------- ボタン共通 ---------- */
+.btn {
+  border: none;
+  background: #f1f1f6;
+  border-radius: var(--radius);
+  font-family: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px;
+  min-width: var(--btn-size);
+  min-height: var(--btn-size);
+  box-shadow: var(--shadow);
+  transition: transform 0.05s ease, background 0.15s ease;
+}
+
+.btn .ico { font-size: 26px; line-height: 1; }
+.btn .lbl { font-size: 11px; font-weight: 700; }
+
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.12); }
+
+.btn.action { background: #fef0f4; }
+.btn.action.save { background: #def7ec; }
+.btn.is-disabled { opacity: 0.35; pointer-events: none; }
+
+/* 選択中のツール */
+.btn.selected {
+  background: var(--accent2);
+  outline: 4px solid #ffb703;
+  outline-offset: -4px;
+}
+
+/* ---------- ステージ(キャンバス) ---------- */
+#stage {
+  position: relative;
+  flex: 1;
+  margin: 8px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: inset 0 0 0 3px #ffe3ad, 0 8px 20px rgba(0,0,0,0.08);
+  touch-action: none;
+}
+
+#stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+#overlay-layer { pointer-events: none; }
+
+/* ---------- 下部バー ---------- */
+#bottombar {
+  background: var(--bar);
+  padding: 8px 10px calc(8px + var(--safe-bottom));
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 5;
+}
+
+.tools, .palette, .sizes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* 色ボタン */
+.swatch {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  padding: 0;
+}
+.swatch.selected {
+  outline: 4px solid var(--ink);
+  outline-offset: 1px;
+  transform: scale(1.08);
+}
+.swatch.rainbow {
+  background: conic-gradient(red, orange, yellow, green, cyan, blue, violet, red);
+}
+
+/* ふとさボタン */
+.size-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f1f1f6;
+  border: none;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.size-btn .dot { background: var(--ink); border-radius: 50%; }
+.size-btn.selected { background: var(--accent2); outline: 4px solid #ffb703; outline-offset: -4px; }
+
+/* ---------- ポップアップ パネル ---------- */
+.panel {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  max-height: 50%;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel.hidden { display: none; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 18px;
+  font-weight: 800;
+  background: var(--accent2);
+}
+.panel-close {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+  background: #fff;
+}
+.panel-body {
+  padding: 12px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+}
+
+/* パネル内アイテム(スタンプ/ぬりえ/はいけい) */
+.pitem {
+  aspect-ratio: 1;
+  border: 3px solid #eee;
+  border-radius: 16px;
+  background: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.pitem svg { width: 80%; height: 80%; }
+.pitem.selected { border-color: var(--accent); background: #fff0f5; }
+
+/* ---------- モーダル ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal.hidden { display: none; }
+.modal-box {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px;
+  text-align: center;
+  max-width: 80%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+#modal-text { font-size: 22px; font-weight: 800; margin: 0 0 20px; }
+.modal-btns { display: flex; gap: 16px; justify-content: center; }
+.modal-yes, .modal-no { min-width: 110px; min-height: 64px; font-size: 20px; font-weight: 800; }
+.modal-yes { background: var(--good); color: #fff; }
+.modal-no { background: #f1f1f6; }
+
+/* ---------- 小さい画面で文字ラベルを隠す ---------- */
+@media (max-width: 520px) {
+  .btn .lbl { display: none; }
+  :root { --btn-size: 56px; }
+  .brand { font-size: 18px; }
+}
+
+/* 横向きで縦スペースが狭いとき */
+@media (max-height: 480px) {
+  .btn .lbl { display: none; }
+  :root { --btn-size: 52px; }
+}
+
+/* 入力デバイスがマウスのときホバー */
+@media (hover: hover) {
+  .btn:hover { background: #ffe7ef; }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "こども おえかき",
+  "short_name": "おえかき",
+  "description": "iPadで遊べる、子供向けのお絵描きツール",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff7e6",
+  "theme_color": "#ffd166",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
