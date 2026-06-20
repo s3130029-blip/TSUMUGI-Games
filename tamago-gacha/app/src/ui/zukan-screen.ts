@@ -4,7 +4,7 @@
 import { ITEMS } from "../data/items";
 import type { Category } from "../data/items";
 import type { SaveData } from "../core/save";
-import { collectionStats, isCollected, itemCount } from "../core/stats";
+import { collectionStats, isCollected, itemCount, isUnseen } from "../core/stats";
 import { CATEGORY_LABEL } from "./labels";
 import { openDetailModal } from "./detail-modal";
 import { must } from "./dom";
@@ -15,6 +15,8 @@ export interface ZukanScreenOptions {
   save: SaveData;
   /** 「ガチャへもどる」押下時に呼ばれる。 */
   onBack: () => void;
+  /** アイテムの詳細を開いたとき（確認済みにして NEW を消す）に呼ばれる。 */
+  onMarkSeen: (itemId: string) => void;
 }
 
 /** カテゴリ別フィルタ（"all" は全表示）。 */
@@ -69,19 +71,28 @@ export function mountZukanScreen(root: HTMLElement, opts: ZukanScreenOptions): v
 
       if (got) {
         const count = itemCount(save, item.id);
+        const unseen = isUnseen(save, item.id);
         const cell = document.createElement("button");
         cell.type = "button";
         cell.className = "zukan__cell is-got";
         // レア度の枠色は「取得済み」だけに付ける（未取得はレア度も隠す方針）。
         cell.dataset.rarity = item.rarity;
+        // 未確認なら「NEW」バッジ（詳細を開くと消える）。
+        const newBadge = unseen
+          ? `<span class="zukan__new" aria-label="あたらしい">NEW</span>`
+          : "";
         cell.innerHTML = `
+          ${newBadge}
           <span class="zukan__emoji">${item.emoji}</span>
           <span class="zukan__name">${item.nameJa}</span>
           ${count > 1 ? `<span class="zukan__count">×${count}</span>` : ""}
         `;
-        cell.addEventListener("click", () =>
-          openDetailModal(item, count, { speechEnabled: save.settings.speechEnabled }),
-        );
+        cell.addEventListener("click", () => {
+          // 詳細を開いたら確認済みにし、このセルの NEW バッジを取り除く（再描画なしで即反映）。
+          opts.onMarkSeen(item.id);
+          cell.querySelector(".zukan__new")?.remove();
+          openDetailModal(item, count, { speechEnabled: save.settings.speechEnabled });
+        });
         grid.appendChild(cell);
       } else {
         // 未取得：何が出るか分からないよう「？」だけ（名前・カテゴリ・レア度を伏せる）。

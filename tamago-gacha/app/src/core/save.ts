@@ -11,6 +11,11 @@ export interface CollectedEntry {
   count: number;
   /** 初回取得日時（エポックミリ秒、NEW判定の起点）。 */
   firstSeenAt: number;
+  /**
+   * 図鑑の詳細を開いて確認済みか（フェーズ5）。
+   * false の間だけ図鑑に「NEW」を出し、詳細を開くと true にする（task.md 仮決め）。
+   */
+  seen: boolean;
 }
 
 /** localStorage に保存するデータ全体（REQUIREMENTS.md 5.2）。 */
@@ -64,7 +69,9 @@ export function sanitizeSave(raw: unknown): SaveData {
         typeof firstSeenAt === "number" &&
         Number.isFinite(firstSeenAt)
       ) {
-        collected[id] = { count: Math.floor(count), firstSeenAt };
+        // seen は boolean ならその値、欠落（旧スキーマ）は true＝既読扱い（移行時の大量NEWを防ぐ）。
+        const seen = typeof e.seen === "boolean" ? e.seen : true;
+        collected[id] = { count: Math.floor(count), firstSeenAt, seen };
       }
     }
   }
@@ -105,12 +112,25 @@ export function recordCollect(
   const existing = save.collected[itemId];
   const isNew = existing == null;
   const entry: CollectedEntry = isNew
-    ? { count: 1, firstSeenAt: now }
-    : { count: existing.count + 1, firstSeenAt: existing.firstSeenAt };
+    ? { count: 1, firstSeenAt: now, seen: false } // 初回は未確認（図鑑で NEW を出す）
+    : { count: existing.count + 1, firstSeenAt: existing.firstSeenAt, seen: existing.seen };
 
   return {
     save: { ...save, collected: { ...save.collected, [itemId]: entry } },
     isNew,
+  };
+}
+
+/**
+ * 指定アイテムを「確認済み（seen=true）」にした新しい SaveData を返す（純粋関数）。
+ * 未取得・既に確認済みなら元の参照をそのまま返す（無駄な再描画・保存を避けられる）。
+ */
+export function markSeen(save: SaveData, itemId: string): SaveData {
+  const existing = save.collected[itemId];
+  if (!existing || existing.seen) return save;
+  return {
+    ...save,
+    collected: { ...save.collected, [itemId]: { ...existing, seen: true } },
   };
 }
 

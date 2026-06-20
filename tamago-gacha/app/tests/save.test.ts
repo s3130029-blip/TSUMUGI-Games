@@ -4,6 +4,7 @@ import {
   sanitizeSave,
   parseSave,
   recordCollect,
+  markSeen,
   loadSave,
   saveSave,
   type SaveData,
@@ -32,7 +33,7 @@ describe("defaultSave", () => {
 
   it("呼ぶたびに別インスタンス（共有されない）", () => {
     const a = defaultSave();
-    a.collected["dog"] = { count: 1, firstSeenAt: 1 };
+    a.collected["dog"] = { count: 1, firstSeenAt: 1, seen: false };
     expect(defaultSave().collected).toEqual({});
   });
 });
@@ -58,12 +59,28 @@ describe("sanitizeSave（破損フォールバック）", () => {
     };
     const s = sanitizeSave(raw);
     expect(Object.keys(s.collected)).toEqual(["ok"]);
-    expect(s.collected.ok).toEqual({ count: 3, firstSeenAt: 1000 });
+    // seen 欠落（旧スキーマ）は true＝既読扱いで補完する。
+    expect(s.collected.ok).toEqual({ count: 3, firstSeenAt: 1000, seen: true });
   });
 
   it("count は整数に丸める", () => {
     const s = sanitizeSave({ collected: { dog: { count: 2.9, firstSeenAt: 5 } } });
     expect(s.collected.dog!.count).toBe(2);
+  });
+
+  it("seen は boolean ならその値、欠落は true（旧セーブの移行）", () => {
+    const s = sanitizeSave({
+      collected: {
+        unseen: { count: 1, firstSeenAt: 1, seen: false },
+        seen: { count: 1, firstSeenAt: 1, seen: true },
+        legacy: { count: 1, firstSeenAt: 1 }, // seen 欠落
+        badSeen: { count: 1, firstSeenAt: 1, seen: "no" }, // 型違い→既定 true
+      },
+    });
+    expect(s.collected.unseen!.seen).toBe(false);
+    expect(s.collected.seen!.seen).toBe(true);
+    expect(s.collected.legacy!.seen).toBe(true);
+    expect(s.collected.badSeen!.seen).toBe(true);
   });
 
   it("settings は boolean のものだけ採用し、欠落は既定値", () => {
@@ -84,30 +101,59 @@ describe("parseSave", () => {
   });
 
   it("正しいJSONはサニタイズして返す", () => {
-    const json = JSON.stringify({ collected: { cat: { count: 2, firstSeenAt: 9 } } });
+    const json = JSON.stringify({ collected: { cat: { count: 2, firstSeenAt: 9, seen: false } } });
     const s = parseSave(json);
-    expect(s.collected.cat).toEqual({ count: 2, firstSeenAt: 9 });
+    expect(s.collected.cat).toEqual({ count: 2, firstSeenAt: 9, seen: false });
   });
 });
 
 describe("recordCollect", () => {
-  it("初回取得は count=1・firstSeenAt=now・isNew=true", () => {
+  it("初回取得は count=1・firstSeenAt=now・seen=false・isNew=true", () => {
     const r = recordCollect(defaultSave(), "dog", 1234);
     expect(r.isNew).toBe(true);
-    expect(r.save.collected.dog).toEqual({ count: 1, firstSeenAt: 1234 });
+    expect(r.save.collected.dog).toEqual({ count: 1, firstSeenAt: 1234, seen: false });
   });
 
-  it("2回目は count+1・firstSeenAt 不変・isNew=false", () => {
+  it("2回目は count+1・firstSeenAt 不変・isNew=false・seen は引き継ぐ", () => {
     const r1 = recordCollect(defaultSave(), "dog", 1000);
     const r2 = recordCollect(r1.save, "dog", 5000);
     expect(r2.isNew).toBe(false);
-    expect(r2.save.collected.dog).toEqual({ count: 2, firstSeenAt: 1000 });
+    expect(r2.save.collected.dog).toEqual({ count: 2, firstSeenAt: 1000, seen: false });
+  });
+
+  it("確認済みのアイテムをもう一度引いても seen=true を保つ", () => {
+    const r1 = recordCollect(defaultSave(), "dog", 1000);
+    const seen = markSeen(r1.save, "dog");
+    const r2 = recordCollect(seen, "dog", 2000);
+    expect(r2.save.collected.dog!.seen).toBe(true);
   });
 
   it("元の SaveData を破壊しない（イミュータブル）", () => {
     const base = defaultSave();
     recordCollect(base, "dog", 1);
     expect(base.collected).toEqual({});
+  });
+});
+
+describe("markSeen", () => {
+  it("未確認のアイテムを seen=true にする", () => {
+    const base = recordCollect(defaultSave(), "dog", 1).save;
+    expect(base.collected.dog!.seen).toBe(false);
+    const next = markSeen(base, "dog");
+    expect(next.collected.dog!.seen).toBe(true);
+  });
+
+  it("未取得・既に確認済みなら同じ参照を返す（無駄な保存/再描画を避ける）", () => {
+    const base = recordCollect(defaultSave(), "dog", 1).save;
+    expect(markSeen(base, "cat")).toBe(base); // 未取得
+    const seen = markSeen(base, "dog");
+    expect(markSeen(seen, "dog")).toBe(seen); // 既に確認済み
+  });
+
+  it("元の SaveData を破壊しない（イミュータブル）", () => {
+    const base = recordCollect(defaultSave(), "dog", 1).save;
+    markSeen(base, "dog");
+    expect(base.collected.dog!.seen).toBe(false);
   });
 });
 

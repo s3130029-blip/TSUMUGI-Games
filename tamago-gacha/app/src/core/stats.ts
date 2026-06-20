@@ -39,6 +39,12 @@ export function dupeCount(save: SaveData, itemId: string): number {
   return Math.max(0, itemCount(save, itemId) - 1);
 }
 
+/** 図鑑で「NEW」を出すべきか（取得済み かつ 詳細を未確認）。フェーズ5。 */
+export function isUnseen(save: SaveData, itemId: string): boolean {
+  const e = save.collected[itemId];
+  return e != null && e.count > 0 && e.seen === false;
+}
+
 /** コレクション全体・カテゴリ別の集計を求める。 */
 export function collectionStats(save: SaveData, items: readonly ItemDef[]): CollectionStats {
   const byCategory: Partial<Record<Category, CategoryStat>> = {};

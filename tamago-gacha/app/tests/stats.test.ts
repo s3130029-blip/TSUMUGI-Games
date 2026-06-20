@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { collectionStats, isCollected, itemCount, dupeCount } from "../src/core/stats";
-import { defaultSave, recordCollect, type SaveData } from "../src/core/save";
+import { collectionStats, isCollected, itemCount, dupeCount, isUnseen } from "../src/core/stats";
+import { defaultSave, recordCollect, markSeen, type SaveData } from "../src/core/save";
 import { ITEMS } from "../src/data/items";
 import type { ItemDef } from "../src/data/items";
 
@@ -30,6 +30,22 @@ describe("isCollected / itemCount / dupeCount", () => {
     expect(dupeCount(save, "dog")).toBe(2);
     expect(dupeCount(save, "cat")).toBe(0);
     expect(dupeCount(save, "rabbit")).toBe(0);
+  });
+});
+
+describe("isUnseen", () => {
+  it("取得直後は未確認（true）", () => {
+    const s = recordCollect(defaultSave(), "dog", 1).save;
+    expect(isUnseen(s, "dog")).toBe(true);
+  });
+
+  it("詳細を確認したら false", () => {
+    const s = markSeen(recordCollect(defaultSave(), "dog", 1).save, "dog");
+    expect(isUnseen(s, "dog")).toBe(false);
+  });
+
+  it("未取得は false", () => {
+    expect(isUnseen(defaultSave(), "dog")).toBe(false);
   });
 });
 

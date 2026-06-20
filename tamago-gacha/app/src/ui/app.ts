@@ -1,6 +1,6 @@
 // 画面遷移の統括＋セーブの簡易ストア（フェーズ3）。
 // セーブは起動時に1回ロードして保持し、ガチャでの取得を localStorage に反映する。
-import { loadSave, recordCollect, saveSave, type SaveData } from "../core/save";
+import { loadSave, recordCollect, markSeen, saveSave, type SaveData } from "../core/save";
 import { setSoundEnabled } from "../audio/sfx";
 import { mountGachaScreen } from "./gacha-screen";
 import { mountZukanScreen } from "./zukan-screen";
@@ -26,10 +26,19 @@ export function startApp(root: HTMLElement): void {
     });
   }
 
+  /** 図鑑で詳細を開いたアイテムを「確認済み」にして永続化する（NEWバッジを消す）。 */
+  function seen(itemId: string): void {
+    const next = markSeen(save, itemId);
+    if (next === save) return; // 変化なし（未取得・既に確認済み）なら保存もしない
+    save = next;
+    saveSave(save);
+  }
+
   function showZukan(): void {
     mountZukanScreen(root, {
       save,
       onBack: showGacha,
+      onMarkSeen: seen,
     });
   }
 
