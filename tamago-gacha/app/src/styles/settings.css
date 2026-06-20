@@ -1,0 +1,155 @@
+/* 設定モーダル（フェーズ5）。detail-modal と同系統の見た目。
+   トグルは大きく、子どもの指でも押しやすく（CLAUDE.md §7）。 */
+
+.settings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  animation: modal-fade 180ms ease-out both;
+}
+.settings-modal__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(90vw, 26rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: clamp(1.2rem, 5vw, 2rem);
+  background: #fffdf7;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: modal-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.settings-modal__close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  background: #ff8fb3;
+  border-radius: 999px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.settings-modal__title {
+  text-align: center;
+  font-weight: 900;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  color: #5b3a1a;
+}
+.settings-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* トグル行：ラベル＋スイッチ。label 全体がタップ領域。 */
+.settings-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  min-height: 3.2rem;
+  padding: 0.5em 0.8em;
+  background: #fff6df;
+  border-radius: 14px;
+}
+.settings-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+.settings-row__label {
+  font-weight: 800;
+  font-size: clamp(1.05rem, 4vw, 1.4rem);
+  color: #5b3a1a;
+}
+.settings-row__hint {
+  font-weight: 600;
+  font-size: clamp(0.75rem, 2.6vw, 0.95rem);
+  color: #99794a;
+}
+
+/* 実体のチェックボックスは隠し（アクセシビリティ用に存在は維持）、見た目はスイッチで表現。 */
+.settings-row__toggle {
+  position: absolute;
+  opacity: 0;
+  width: 3.4rem;
+  height: 2rem;
+  right: 0.8em;
+  margin: 0;
+}
+.settings-row__switch {
+  flex: 0 0 auto;
+  position: relative;
+  width: 3.4rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: #d8c7a8;
+  transition: background 140ms ease-out;
+}
+.settings-row__switch::after {
+  content: "";
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 140ms ease-out;
+}
+.settings-row__toggle:checked ~ .settings-row__switch {
+  background: #5ac77a;
+}
+.settings-row__toggle:checked ~ .settings-row__switch::after {
+  transform: translateX(1.4rem);
+}
+/* キーボード操作時のフォーカス表示（マウス/タッチでは出さない）。 */
+.settings-row__toggle:focus-visible ~ .settings-row__switch {
+  outline: 3px solid #3a6ea5;
+  outline-offset: 2px;
+}
+
+/* データリセット（保護者向け・控えめな危険色）。 */
+.settings-modal__reset {
+  margin-top: 0.4rem;
+  min-height: 3rem;
+  padding: 0.5em 1.2em;
+  font-weight: 800;
+  font-size: clamp(1rem, 3.6vw, 1.3rem);
+  color: #fff;
+  background: #e0705a;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #b9543f, 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+.settings-modal__reset:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #b9543f, 0 3px 6px rgba(0, 0, 0, 0.18);
+}
+.settings-modal__note {
+  text-align: center;
+  font-weight: 600;
+  font-size: clamp(0.72rem, 2.5vw, 0.9rem);
+  color: #99794a;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-modal,
+  .settings-modal__card { animation-duration: 120ms; }
+  .settings-modal__reset:active { transform: none; }
+}
+:root.is-reduced .settings-modal,
+:root.is-reduced .settings-modal__card { animation-duration: 120ms; }
+:root.is-reduced .settings-modal__reset:active { transform: none; }

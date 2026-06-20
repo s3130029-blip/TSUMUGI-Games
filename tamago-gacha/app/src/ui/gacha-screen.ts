@@ -13,12 +13,16 @@ import { playSfx } from "../audio/sfx";
 /** 演出の進行状態。idle のときだけ次のガチャを受け付ける（連打対策）。 */
 type Phase = "idle" | "playing" | "result";
 
-/** ガチャ画面のオプション（フェーズ3で追加）。 */
+/** ガチャ画面のオプション（フェーズ3で追加、フェーズ5で設定・ひかえめを追加）。 */
 export interface GachaScreenOptions {
   /** 取得を記録して永続化する。初回判定と取得後の個数を返す。 */
   onCollect: (itemId: string) => { isNew: boolean; count: number };
   /** 図鑑へ遷移する。 */
   onOpenZukan: () => void;
+  /** 設定モーダルを開く。 */
+  onOpenSettings: () => void;
+  /** 演出ひかえめか（OS設定 or アプリ設定）。各演出の開始時に評価する。 */
+  isReducedMotion: () => boolean;
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
@@ -30,6 +34,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
 
   root.innerHTML = `
     <main class="gacha">
+      <button class="gacha__settings-btn" type="button" aria-label="せっていを開く">⚙</button>
       <button class="gacha__zukan-btn" type="button" aria-label="ずかんを開く">ずかん</button>
       <div class="gacha__stage" data-phase="idle">
         <div class="flash" aria-hidden="true"></div>
@@ -46,6 +51,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   const stage = must<HTMLElement>(root, ".gacha__stage");
   const eggButton = must<HTMLButtonElement>(root, ".egg-button");
   const zukanButton = must<HTMLButtonElement>(root, ".gacha__zukan-btn");
+  const settingsButton = must<HTMLButtonElement>(root, ".gacha__settings-btn");
   const eggShake = must<SVGGElement>(root, ".egg-shake");
   const eggTop = must<SVGGElement>(root, ".egg-top");
   const eggBottom = must<SVGGElement>(root, ".egg-bottom");
@@ -55,12 +61,6 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   const sparkles = must<HTMLElement>(root, ".sparkles");
   const hint = must<HTMLElement>(root, ".hint");
 
-  // 演出控えめモード（OS 設定）。尊重して時間を短縮する（CLAUDE.md §7）。
-  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const t = prefersReduced
-    ? { squash: 60, shake: 280, open: 120, reveal: 220 }
-    : TIMING;
-
   function setPhase(p: Phase): void {
     phase = p;
     stage.dataset.phase = p;
@@ -68,6 +68,11 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
 
   async function play(): Promise<void> {
     if (phase !== "idle") return; // 演出中・結果中のタップは無視（破綻防止）
+
+    // 演出控えめモード（OS 設定 or アプリ設定）。開始時に評価して時間を短縮する（CLAUDE.md §7）。
+    const prefersReduced = opts.isReducedMotion();
+    const t = prefersReduced ? { squash: 60, shake: 280, open: 120, reveal: 220 } : TIMING;
+
     setPhase("playing");
     playSfx("tap"); // ① タップの手応え（音）
     result.replaceChildren();
@@ -164,4 +169,6 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   });
   // 図鑑へ（stage の外に置くため、上の「つぎへ」タップとは競合しない）。
   zukanButton.addEventListener("click", () => opts.onOpenZukan());
+  // 設定へ（同じく stage 外）。
+  settingsButton.addEventListener("click", () => opts.onOpenSettings());
 }

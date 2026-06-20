@@ -155,6 +155,28 @@
   box-shadow: 0 1px 0 #e06a92, 0 3px 6px rgba(0, 0, 0, 0.18);
 }
 
+/* 設定ボタン（歯車。左上に固定。図鑑ボタンと左右対称） */
+.gacha__settings-btn {
+  position: absolute;
+  top: calc(0.6rem + env(safe-area-inset-top));
+  left: calc(0.8rem + env(safe-area-inset-left));
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #fff;
+  background: #7fb2e0;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #5a8ec0, 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+.gacha__settings-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #5a8ec0, 0 3px 6px rgba(0, 0, 0, 0.18);
+}
+
 /* ⑦ NEW! / ○こめ！（集める動機付けの小演出） */
 .result__new,
 .result__dupe {
@@ -229,7 +251,7 @@
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.25));
 }
 
-/* 演出控えめモード：派手な動きを抑える */
+/* 演出控えめモード：派手な動きを抑える（OS設定）。 */
 @media (prefers-reduced-motion: reduce) {
   .hint { animation: none; }
   .flash.is-flash { animation-duration: 120ms; }
@@ -241,3 +263,13 @@
   .result__dupe { animation-duration: 220ms; }
   .gacha__stage[data-rarity="superRare"]::after { animation: none; }
 }
+/* アプリ内「えんしゅつ ひかえめ」トグル（is-reduced）でも同様に抑える。 */
+:root.is-reduced .hint { animation: none; }
+:root.is-reduced .flash.is-flash { animation-duration: 120ms; }
+:root.is-reduced .result__item,
+:root.is-reduced .result__got,
+:root.is-reduced .result__name,
+:root.is-reduced .result__rarity,
+:root.is-reduced .result__new,
+:root.is-reduced .result__dupe { animation-duration: 220ms; }
+:root.is-reduced .gacha__stage[data-rarity="superRare"]::after { animation: none; }

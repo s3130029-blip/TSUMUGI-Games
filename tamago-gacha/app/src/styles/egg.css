@@ -84,13 +84,17 @@
   transform: translateY(5%) scale(1.02);
 }
 
-/* 演出控えめモード：揺れを穏やかに（開く動きは時間短縮で残す） */
+/* 演出控えめモード：揺れを穏やかに（開く動きは時間短縮で残す）。
+   OS設定（@media reduce）とアプリ内トグル（:root.is-reduced）の両方に同じ抑制をかける。 */
+@keyframes egg-shake-soft {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-2.5deg); }
+}
 @media (prefers-reduced-motion: reduce) {
   .gacha__stage[data-phase="idle"] .egg-shake { animation: none; }
   .egg-shake.is-squash { animation: none; }
   .egg-shake.is-shaking { animation: egg-shake-soft 0.6s ease-in-out infinite; }
-  @keyframes egg-shake-soft {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-2.5deg); }
-  }
 }
+:root.is-reduced .gacha__stage[data-phase="idle"] .egg-shake { animation: none; }
+:root.is-reduced .egg-shake.is-squash { animation: none; }
+:root.is-reduced .egg-shake.is-shaking { animation: egg-shake-soft 0.6s ease-in-out infinite; }

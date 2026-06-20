@@ -3,6 +3,7 @@ import "./styles/base.css";
 import "./styles/gacha.css";
 import "./styles/egg.css";
 import "./styles/zukan.css";
+import "./styles/settings.css";
 import { startApp } from "./ui/app";
 import { initSpeech } from "./audio/speech";
 import { initAudio } from "./audio/sfx";
