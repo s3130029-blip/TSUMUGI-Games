@@ -6,7 +6,7 @@ import { mulberry32, randomSeed, type Rng } from "../core/prng";
 import { ITEMS } from "../data/items";
 import type { ItemDef } from "../data/items";
 import { burstSparkles } from "./effects/sparkle";
-import { eggSvgMarkup } from "./svg-egg";
+import { eggSvgMarkup, applyEggPalette } from "./svg-egg";
 import { must } from "./dom";
 import { playSfx } from "../audio/sfx";
 
@@ -52,6 +52,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   const eggButton = must<HTMLButtonElement>(root, ".egg-button");
   const zukanButton = must<HTMLButtonElement>(root, ".gacha__zukan-btn");
   const settingsButton = must<HTMLButtonElement>(root, ".gacha__settings-btn");
+  const eggSvg = must<SVGElement>(root, ".egg-svg");
   const eggShake = must<SVGGElement>(root, ".egg-shake");
   const eggTop = must<SVGGElement>(root, ".egg-top");
   const eggBottom = must<SVGGElement>(root, ".egg-bottom");
@@ -60,6 +61,9 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
   const result = must<HTMLElement>(root, ".result");
   const sparkles = must<HTMLElement>(root, ".sparkles");
   const hint = must<HTMLElement>(root, ".hint");
+
+  // 最初の待機タマゴの殻色を抽選（以降は reset() で毎回変える）。
+  applyEggPalette(eggSvg, rng);
 
   function setPhase(p: Phase): void {
     phase = p;
@@ -156,6 +160,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
     sparkles.replaceChildren();
     hint.textContent = "タマゴをタップしてね！";
     delete stage.dataset.rarity;
+    applyEggPalette(eggSvg, rng); // 次の待機タマゴは別の殻色に
     setPhase("idle");
   }
 
