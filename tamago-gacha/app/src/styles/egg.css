@@ -9,13 +9,13 @@
   display: block;
   overflow: visible; /* 開いた上半分が viewBox 外へ出ても切れないように */
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
-  /* 殻の配色（既定＝クリーム）。JS が待機タマゴごとに上書きする（svg-egg.ts）。
+  /* 殻の配色（既定＝鮮やかオレンジ）。JS が待機タマゴごとに上書きする（svg-egg.ts）。
      presentation 属性より CSS が優先されるため、属性値はフォールバックとして残す。 */
-  --egg-c1: #fff7e6;
-  --egg-c2: #ffe1a8;
-  --egg-c3: #ffc46b;
-  --egg-stroke: #e0a04a;
-  --egg-accent: #ff9a3c;
+  --egg-c1: #ffe6c2;
+  --egg-c2: #ffab47;
+  --egg-c3: #ff7a00;
+  --egg-stroke: #d65f00;
+  --egg-accent: #ff8c1a;
 }
 
 /* グラデの各ストップ・輪郭・模様ドットに CSS変数を割り当てる（毎回色が変わる） */

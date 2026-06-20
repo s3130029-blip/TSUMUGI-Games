@@ -49,8 +49,8 @@ export const RARITY_EFFECT: Record<
     label: string;
   }
 > = {
-  common: { shakeScale: 1.0, holdBeforeOpen: 0, sparkleCount: 14, sparkleVariant: "normal", label: "" },
-  rare: { shakeScale: 1.6, holdBeforeOpen: 180, sparkleCount: 26, sparkleVariant: "rare", label: "レア！" },
+  common: { shakeScale: 1.0, holdBeforeOpen: 0, sparkleCount: 22, sparkleVariant: "normal", label: "" },
+  rare: { shakeScale: 1.6, holdBeforeOpen: 180, sparkleCount: 34, sparkleVariant: "rare", label: "レア！" },
   superRare: { shakeScale: 2.3, holdBeforeOpen: 420, sparkleCount: 40, sparkleVariant: "super", label: "げきレア!!" },
 };
 

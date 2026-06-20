@@ -103,6 +103,19 @@ export function speakSequence(parts: readonly SpeakPart[]): CancelSpeak {
 }
 
 /**
+ * 読み上げエンジンをユーザー操作（タップ）の中で「解錠」する。
+ * iOS Safari は最初の発話がユーザー操作起点である必要があり、タイマー後（演出の最後）の
+ * speak() は弾かれることがある。タップ時に無音（volume=0）の極短発話を1回流しておくと、
+ * 以降はタイマー経由の発話も通るようになる。未対応端末では何もしない。
+ */
+export function primeSpeech(): void {
+  if (!isSpeechSupported()) return;
+  const u = new SpeechSynthesisUtterance(" ");
+  u.volume = 0; // 無音（耳に聞こえない）。解錠のためだけに流す。
+  window.speechSynthesis.speak(u);
+}
+
+/**
  * 日本語名 → 英語名 の順に読み上げる（REQUIREMENTS.md 4.4 のメイン用途）。
  * 速度は config の SPEECH_RATE を使う。戻り値で中断できる。
  */

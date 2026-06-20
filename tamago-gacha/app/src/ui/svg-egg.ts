@@ -20,14 +20,19 @@ export interface EggPalette {
   accent: string;
 }
 
-/** 殻の色バリエーション。待機タマゴごとに rng で1つ選ぶ。 */
+/**
+ * 殻の色バリエーション。待機タマゴごとに rng で1つ選ぶ。
+ * 子どもウケを狙い、淡色ではなく**鮮やかでくっきりした色**にする。
+ * c1（上＝明るめのツヤ）→ c2（中）→ c3（下＝濃いめ）のグラデで立体感を出す。
+ */
 export const EGG_PALETTES: readonly EggPalette[] = [
-  { c1: "#fff7e6", c2: "#ffe1a8", c3: "#ffc46b", stroke: "#e0a04a", accent: "#ff9a3c" }, // クリーム
-  { c1: "#fff0f5", c2: "#ffd1e3", c3: "#ff9ec4", stroke: "#e87aa8", accent: "#ff7eb3" }, // ピンク
-  { c1: "#f0fff7", c2: "#c2f5dd", c3: "#8fe6b8", stroke: "#5cc191", accent: "#57c785" }, // ミント
-  { c1: "#eef7ff", c2: "#c7e6ff", c3: "#8fc8ff", stroke: "#5a9fe0", accent: "#5fb8ff" }, // ブルー
-  { c1: "#f7f0ff", c2: "#e0d1ff", c3: "#c2a8ff", stroke: "#9b7ad0", accent: "#b07eff" }, // ラベンダー
-  { c1: "#fffdf0", c2: "#fff3b8", c3: "#ffe066", stroke: "#e0c24a", accent: "#ffd34e" }, // イエロー
+  { c1: "#ffdcd6", c2: "#ff7a66", c3: "#fb3b22", stroke: "#c9281a", accent: "#ff5235" }, // レッド
+  { c1: "#ffe6c2", c2: "#ffab47", c3: "#ff7a00", stroke: "#d65f00", accent: "#ff8c1a" }, // オレンジ
+  { c1: "#fff7c2", c2: "#ffe04a", c3: "#ffc400", stroke: "#d9a300", accent: "#ffd11a" }, // イエロー
+  { c1: "#d4ffe0", c2: "#58e08a", c3: "#16bf5e", stroke: "#0e9647", accent: "#2bd072" }, // グリーン
+  { c1: "#d2efff", c2: "#57b6ff", c3: "#1f8cff", stroke: "#1068c4", accent: "#34a0ff" }, // ブルー
+  { c1: "#ecd9ff", c2: "#b277ff", c3: "#8a39f5", stroke: "#6a1bc4", accent: "#9b4dff" }, // パープル
+  { c1: "#ffd6ea", c2: "#ff73ab", c3: "#ff3585", stroke: "#d81668", accent: "#ff4f97" }, // ピンク
 ];
 
 /** rng で殻の配色を1つ選び、SVG要素に CSS変数として設定する（演出用途）。 */

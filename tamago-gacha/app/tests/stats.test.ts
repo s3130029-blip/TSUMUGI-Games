@@ -72,11 +72,12 @@ describe("collectionStats", () => {
   });
 
   it("カテゴリ別の取得数が正しい", () => {
-    // dog は animal、car は vehicle、apple は food
-    const s = collectionStats(saveWith({ dog: 1, car: 1, apple: 2 }), ITEMS);
+    // dog は animal、car は vehicle、sushi は food、apple は fruit
+    const s = collectionStats(saveWith({ dog: 1, car: 1, sushi: 1, apple: 2 }), ITEMS);
     expect(s.byCategory.animal?.collected).toBe(1);
     expect(s.byCategory.vehicle?.collected).toBe(1);
     expect(s.byCategory.food?.collected).toBe(1);
+    expect(s.byCategory.fruit?.collected).toBe(1);
   });
 
   it("全種取得で isComplete=true・ratio=1", () => {

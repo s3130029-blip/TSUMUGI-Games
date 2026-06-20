@@ -5,8 +5,13 @@ import type { Category, Rarity } from "../data/items";
 /** カテゴリの表示名。 */
 export const CATEGORY_LABEL: Record<Category, string> = {
   animal: "どうぶつ",
+  sea: "うみ",
+  bug: "むし",
   vehicle: "のりもの",
   food: "たべもの",
+  fruit: "くだもの",
+  sweets: "おかし",
+  nature: "しぜん",
 };
 
 /** レア度の表示名。 */

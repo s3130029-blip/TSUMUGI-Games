@@ -9,6 +9,7 @@ import { burstSparkles } from "./effects/sparkle";
 import { eggSvgMarkup, applyEggPalette } from "./svg-egg";
 import { must } from "./dom";
 import { playSfx } from "../audio/sfx";
+import { isSpeechSupported, primeSpeech, speakJaThenEn } from "../audio/speech";
 
 /** 演出の進行状態。idle のときだけ次のガチャを受け付ける（連打対策）。 */
 type Phase = "idle" | "playing" | "result";
@@ -23,6 +24,8 @@ export interface GachaScreenOptions {
   onOpenSettings: () => void;
   /** 演出ひかえめか（OS設定 or アプリ設定）。各演出の開始時に評価する。 */
   isReducedMotion: () => boolean;
+  /** 読み上げが有効か（アプリ設定）。登場時の名前読み上げの判定に使う。 */
+  isSpeechEnabled: () => boolean;
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
@@ -79,6 +82,10 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
 
     setPhase("playing");
     playSfx("tap"); // ① タップの手応え（音）
+    // 登場時に名前を読み上げる予定なら、このタップ（ユーザー操作）の中で読み上げを解錠しておく。
+    // iOS は最初の発話がタップ起点である必要があり、演出後（タイマー経由）の発話が弾かれるのを防ぐ。
+    const canSpeak = opts.isSpeechEnabled() && isSpeechSupported();
+    if (canSpeak) primeSpeech();
     result.replaceChildren();
     sparkles.replaceChildren();
     hint.textContent = "";
@@ -125,6 +132,8 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
     if (item.rarity === "rare") playSfx("rareJingle");
     else if (item.rarity === "superRare") playSfx("superJingle");
     showResult(item, fx, collected);
+    // ⑦ モノの名前を「日本語 → 英語」の順に読み上げる（図鑑の詳細と同じ学びの要素）。
+    if (canSpeak) speakJaThenEn(item.nameJa, item.nameEn);
     await sleep(t.reveal);
 
     // ⑦ 結果表示完了
@@ -149,6 +158,7 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
       <div class="result__item">${item.emoji}</div>
       <div class="result__got">ゲット！</div>
       <div class="result__name">${item.nameJa}</div>
+      <div class="result__name-en">${item.nameEn}</div>
     `;
   }
 

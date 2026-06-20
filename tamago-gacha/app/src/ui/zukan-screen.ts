@@ -25,8 +25,13 @@ type Filter = Category | "all";
 const FILTERS: readonly { key: Filter; label: string }[] = [
   { key: "all", label: "ぜんぶ" },
   { key: "animal", label: CATEGORY_LABEL.animal },
+  { key: "sea", label: CATEGORY_LABEL.sea },
+  { key: "bug", label: CATEGORY_LABEL.bug },
   { key: "vehicle", label: CATEGORY_LABEL.vehicle },
   { key: "food", label: CATEGORY_LABEL.food },
+  { key: "fruit", label: CATEGORY_LABEL.fruit },
+  { key: "sweets", label: CATEGORY_LABEL.sweets },
+  { key: "nature", label: CATEGORY_LABEL.nature },
 ];
 
 export function mountZukanScreen(root: HTMLElement, opts: ZukanScreenOptions): void {

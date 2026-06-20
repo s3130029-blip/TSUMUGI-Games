@@ -2,7 +2,16 @@ import { describe, it, expect } from "vitest";
 import { ITEMS } from "../src/data/items";
 import type { Category, Rarity } from "../src/data/items";
 
-const CATEGORIES: readonly Category[] = ["animal", "vehicle", "food"];
+const CATEGORIES: readonly Category[] = [
+  "animal",
+  "sea",
+  "bug",
+  "vehicle",
+  "food",
+  "fruit",
+  "sweets",
+  "nature",
+];
 const RARITIES: readonly Rarity[] = ["common", "rare", "superRare"];
 
 describe("アイテムマスタの整合性", () => {
@@ -31,7 +40,7 @@ describe("アイテムマスタの整合性", () => {
     }
   });
 
-  it("フェーズ1として十分な種類数がある（12種以上）", () => {
-    expect(ITEMS.length).toBeGreaterThanOrEqual(12);
+  it("豊富な種類数がある（100種規模・90種以上）", () => {
+    expect(ITEMS.length).toBeGreaterThanOrEqual(90);
   });
 });

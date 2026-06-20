@@ -86,6 +86,7 @@ export function startApp(root: HTMLElement): void {
       onOpenZukan: showZukan,
       onOpenSettings: openSettings,
       isReducedMotion,
+      isSpeechEnabled: () => save.settings.speechEnabled,
     });
   }
 
