@@ -1,7 +1,10 @@
 /* ============================================================
    data.js  -  アプリで使う定数データ
    ここを編集するだけで 色 / スタンプ / ぬりえ を増やせます。
+   イラスト背景(公園・遊園地など)は js/scenes.js にあります。
    ============================================================ */
+
+import { SCENES } from './scenes.js';
 
 // ---- 色パレット(明るい子供向けカラー) ----
 export const COLORS = [
@@ -32,7 +35,9 @@ export const STAMPS = [
 ];
 
 // ---- 背景 ----
+// イラスト背景(scenes.js)を先頭に、そのあとに無地・模様の背景。
 export const BACKGROUNDS = [
+  ...SCENES,
   { id: 'white',    label: 'しろ',     type: 'color', value: '#ffffff' },
   { id: 'sky',      label: 'そら',     type: 'color', value: '#cdeffd' },
   { id: 'mint',     label: 'みどり',   type: 'color', value: '#d8f7e3' },

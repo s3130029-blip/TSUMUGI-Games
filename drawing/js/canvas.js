@@ -23,6 +23,7 @@ export class Layers {
     this.height = 0;
     this.background = null;        // 現在の背景設定
     this.templateImg = null;       // 現在のぬりえ画像(Image)
+    this.sceneImg = null;          // 現在のイラスト背景(Image)
 
     this._onResize = null;
   }
@@ -73,6 +74,14 @@ export class Layers {
   // ---------- 背景 ----------
   setBackground(bg) {
     this.background = bg;
+    this.sceneImg = null;
+    // イラスト背景は SVG を画像として読み込んでから描く
+    if (bg && bg.type === 'scene') {
+      const img = new Image();
+      img.onload = () => { if (this.background === bg) this.renderBackground(); };
+      img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(bg.svg);
+      this.sceneImg = img;
+    }
     this.renderBackground();
   }
 
@@ -82,7 +91,18 @@ export class Layers {
     const bg = this.background;
     if (!bg) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h); return; }
 
-    if (bg.type === 'color') {
+    if (bg.type === 'scene') {
+      // ベース色で塗ってから、シーン画像を cover(画面いっぱい・歪ませない)で描く
+      g.fillStyle = bg.base || '#ffffff';
+      g.fillRect(0, 0, w, h);
+      const img = this.sceneImg;
+      if (img && img.complete && img.naturalWidth) {
+        const iw = img.naturalWidth, ih = img.naturalHeight;
+        const scale = Math.max(w / iw, h / ih);
+        const dw = iw * scale, dh = ih * scale;
+        g.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      }
+    } else if (bg.type === 'color') {
       g.fillStyle = bg.value;
       g.fillRect(0, 0, w, h);
     } else if (bg.type === 'grid') {

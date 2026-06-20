@@ -3,7 +3,7 @@
    ファイルを更新したら CACHE のバージョン名を変えてください。
    ============================================================ */
 
-const CACHE = 'oekaki-v2';
+const CACHE = 'oekaki-v3';
 
 const ASSETS = [
   './',
@@ -13,6 +13,7 @@ const ASSETS = [
   './css/style.css',
   './js/app.js',
   './js/data.js',
+  './js/scenes.js',
   './js/canvas.js',
   './js/history.js',
   './js/fill.js',

@@ -270,12 +270,18 @@ function buildBackgroundBody() {
   const body = panelBody();
   for (const bg of BACKGROUNDS) {
     const b = document.createElement('button');
-    b.className = 'pitem';
-    b.style.background = bg.value;
-    b.style.fontSize = '13px';
-    b.style.fontWeight = '800';
-    b.style.color = bg.id === 'night' ? '#fff' : '#555';
-    b.textContent = bg.label;
+    if (bg.type === 'scene') {
+      // イラスト背景はサムネイル + ラベルを表示
+      b.className = 'pitem scene';
+      b.innerHTML = `${bg.svg}<span class="cap">${bg.label}</span>`;
+    } else {
+      b.className = 'pitem';
+      b.style.background = bg.value;
+      b.style.fontSize = '13px';
+      b.style.fontWeight = '800';
+      b.style.color = bg.id === 'night' ? '#fff' : '#555';
+      b.textContent = bg.label;
+    }
     b.addEventListener('click', () => {
       layers.setBackground(bg);
       sound.pop();

@@ -264,6 +264,33 @@ html, body {
 .pitem svg { width: 80%; height: 80%; }
 .pitem.selected { border-color: var(--accent); background: #fff0f5; }
 
+/* イラスト背景のサムネイル */
+.pitem.scene {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  font-size: 0;
+}
+.pitem.scene svg {
+  width: 100%;
+  height: 100%;
+  border-radius: 13px;
+  object-fit: cover;
+}
+.pitem.scene .cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 3px 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.32);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
 /* ---------- モーダル ---------- */
 .modal {
   position: fixed;
