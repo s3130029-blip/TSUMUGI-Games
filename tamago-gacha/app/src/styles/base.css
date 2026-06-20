@@ -49,6 +49,17 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* キーボード操作時だけフォーカス枠を出す（タップ操作では出ない）。
+   マウス/タッチ中心の子ども向けUIでも、キーボード利用者のアクセシビリティを確保する。 */
+:focus-visible {
+  outline: 3px solid #3a6ea5;
+  outline-offset: 2px;
+}
+/* タップ等（focus-visible でない focus）では枠を出さない。 */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 img,
 svg {
   -webkit-user-drag: none;

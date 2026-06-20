@@ -58,15 +58,19 @@
 - [x] `tests/speech.test.ts`（`pickVoice` の一致優先順位・正規化・該当なし）。型エラー0・テスト全緑・build 確認
 - [ ] **iPad 横 Safari 実機での音声確認**（ja→en の発話・音声の有無／※開発環境では実行不可＝ユーザー確認項目）
 
-## フェーズ5：仕上げ
-- [ ] `audio/sfx.ts`：Web Audio 合成音（タップ/パカッ/キラーン/レアジングル）
-- [ ] NEWバッジ（仮決め：図鑑詳細を開いたら消える）・設定画面・データリセット
-- [ ] PWA（manifest・Service Worker・オフライン・ホーム画面追加）
-- [ ] アクセシビリティ・演出の磨き込み
+## フェーズ5：仕上げ  ← ほぼ完了（実機確認のみ残）
+- [x] `audio/sfx.ts`：Web Audio 合成音（タップ/パカッ/キラーン/レア・激レアジングル）。`initAudio` で初回タップ resume（iOS）。`setSoundEnabled` で設定反映
+- [x] NEWバッジ（仮決め通り：図鑑詳細を開いたら消える）。`save.ts` に `seen` を追加、`markSeen`／`stats.isUnseen`、図鑑セルにバッジ。`tests/save.test.ts`・`tests/stats.test.ts` 追加（62件緑）
+- [x] 設定モーダル（よみあげ／こうかおん／えんしゅつひかえめ）・データリセット（`window.confirm` で保護者確認）
+- [x] 演出ひかえめ（アプリ内トグル）：`is-reduced` クラス＋CSS併記、`gacha-screen` は `isReducedMotion()` を各演出開始時に評価
+- [x] タマゴの殻の色を毎回変える：`EGG_PALETTES`（6色）を CSS変数で適用。待機ごとに rng 抽選（演出用途・`Math.random` 不使用）
+- [x] アクセシビリティ：`:focus-visible` 枠、設定トグルは checkbox 意味論、NEWバッジに `aria-label`
+- [ ] **PWA**：ユーザー判断により今回は見送り（manifest/Service Worker/オフライン/ホーム画面追加は別途）
+- [ ] **iPad 横 Safari 実機確認**（効果音の発音・設定の反映・殻色の変化／※開発環境では実行不可＝ユーザー確認項目）
 
-### UI改善メモ（仕上げでまとめて対応）
-- [ ] **タマゴの殻の色を毎回変える**（現状は毎回同じで単調）。`svg-egg.ts` のグラデを数色用意し、待機タマゴごとに rng で抽選。※ユーザー要望
-- [ ] その他、全体完成後に細かいUI調整をまとめて実施。
+### フェーズ5 仮決め・補足
+- NEWバッジ：旧セーブ（`seen` 欠落）は「既読」として移行し、大量NEWを防ぐ（`sanitizeSave`）。
+- 設定の入口は当面ガチャ画面の歯車のみ（独立した設定画面は設けず、モーダルで対応）。
 
 ---
 

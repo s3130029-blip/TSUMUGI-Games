@@ -44,18 +44,26 @@ npm install
 ```
 src/
 ├── main.ts            # エントリ
-├── config.ts          # 調整値（確率・演出時間）を集約
+├── config.ts          # 調整値（確率・演出時間・音量）を集約
 ├── data/items.ts      # アイテムマスタ（型＋初期データ）
 ├── core/              # 純粋関数（テスト対象）
 │   ├── prng.ts        # シード可能な擬似乱数（mulberry32）
-│   └── gacha.ts       # 重み付き抽選
+│   ├── gacha.ts       # 重み付き抽選
+│   ├── save.ts        # localStorage 保存/読込・NEW判定(seen)
+│   └── stats.ts       # コンプ率・カテゴリ別集計・未確認(NEW)判定
+├── audio/             # 副作用（実機で聴取確認）
+│   ├── sfx.ts         # 効果音（Web Audio 合成音）
+│   └── speech.ts      # 日英読み上げ（Web Speech API）
 ├── ui/                # 画面・演出（DOM操作）
-│   ├── app.ts         # 画面統括
+│   ├── app.ts         # 画面統括・セーブ/設定ストア
 │   ├── gacha-screen.ts# タマゴ演出シーケンス
-│   ├── svg-egg.ts     # タマゴ＋ひびのSVGマークアップ
+│   ├── zukan-screen.ts# 図鑑（コレクション）
+│   ├── detail-modal.ts# アイテム詳細＋読み上げ
+│   ├── settings-modal.ts # 設定（読み上げ/効果音/ひかえめ・リセット）
+│   ├── svg-egg.ts     # タマゴ＋ひびのSVG・殻色パレット
 │   └── effects/sparkle.ts
-└── styles/            # base / gacha / egg の各CSS
-tests/                 # Vitest（prng / gacha / items整合性）
+└── styles/            # base / gacha / egg / zukan / settings の各CSS
+tests/                 # Vitest（prng / gacha / items / save / stats / speech）
 ```
 
 抽選などの乱数はすべてシード可能な擬似乱数（`core/prng.ts`）を経由し、`Math.random()` は
@@ -94,12 +102,14 @@ https://s3130029-blip.github.io/TSUMUGI-Games/tamago-gacha/
 
 ## 開発状況
 
-- **フェーズ1（MVP）完了**：タマゴ演出（ガタガタ→ひび→パカッ→登場→キラキラ→名前）、
-  シード可能な抽選、型チェック0・テスト全緑、ローカルでのビルド/開発サーバ動作を確認済み。
-- 以降の予定は [task.md](task.md) を参照（フェーズ2=レアリティ、3=図鑑、4=読み上げ、5=仕上げ）。
+- **フェーズ1〜5まで実装完了**（型チェック0・テスト全緑62件・ローカルでのビルド/開発サーバ動作を確認済み）。
+  - 1=MVP（タマゴ演出）／2=レアリティ／3=図鑑・localStorage保存／4=日英読み上げ／
+    5=仕上げ（効果音・設定・NEWバッジ・殻色バリエーション・アクセシビリティ）。
+- **PWA対応は今回見送り**（必要になれば manifest／Service Worker を別途追加）。
+- 詳細な進捗は [task.md](task.md) を参照。
 
 ### 未確認事項（正直に明記）
 
 - **iPad 横（iOS Safari）実機でのスモークテストは未実施**です。
-  SVG描画・タッチ操作・スクロール抑制・全画面挙動は iOS 固有の差があるため、
-  実機での目視確認が完了条件になります（開発環境では実行できません）。
+  SVG描画・タッチ操作・スクロール抑制・全画面挙動・**効果音の発音・読み上げ**は
+  iOS 固有の差があるため、実機での目視/聴取確認が完了条件になります（開発環境では実行できません）。
