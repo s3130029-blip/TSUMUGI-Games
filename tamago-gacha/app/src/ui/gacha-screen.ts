@@ -7,19 +7,29 @@ import { ITEMS } from "../data/items";
 import type { ItemDef } from "../data/items";
 import { burstSparkles } from "./effects/sparkle";
 import { eggSvgMarkup } from "./svg-egg";
+import { must } from "./dom";
 
 /** 演出の進行状態。idle のときだけ次のガチャを受け付ける（連打対策）。 */
 type Phase = "idle" | "playing" | "result";
 
+/** ガチャ画面のオプション（フェーズ3で追加）。 */
+export interface GachaScreenOptions {
+  /** 取得を記録して永続化する。初回判定と取得後の個数を返す。 */
+  onCollect: (itemId: string) => { isNew: boolean; count: number };
+  /** 図鑑へ遷移する。 */
+  onOpenZukan: () => void;
+}
+
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
-export function mountGachaScreen(root: HTMLElement): void {
+export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): void {
   // 抽選・演出で共有する乱数。通常プレイは非決定的シードから。
   const rng: Rng = mulberry32(randomSeed());
   let phase: Phase = "idle";
 
   root.innerHTML = `
     <main class="gacha">
+      <button class="gacha__zukan-btn" type="button" aria-label="ずかんを開く">ずかん</button>
       <div class="gacha__stage" data-phase="idle">
         <div class="flash" aria-hidden="true"></div>
         <button class="egg-button" type="button" aria-label="タマゴをタップしてガチャを回す">
@@ -34,6 +44,7 @@ export function mountGachaScreen(root: HTMLElement): void {
 
   const stage = must<HTMLElement>(root, ".gacha__stage");
   const eggButton = must<HTMLButtonElement>(root, ".egg-button");
+  const zukanButton = must<HTMLButtonElement>(root, ".gacha__zukan-btn");
   const eggShake = must<SVGGElement>(root, ".egg-shake");
   const eggTop = must<SVGGElement>(root, ".egg-top");
   const eggBottom = must<SVGGElement>(root, ".egg-bottom");
@@ -95,8 +106,9 @@ export function mountGachaScreen(root: HTMLElement): void {
     await sleep(t.open);
     flash.classList.remove("is-flash");
 
-    // ⑤⑥ 登場（バウンド）＋キラキラ
-    showResult(item, fx);
+    // ⑤⑥ 登場（バウンド）＋キラキラ。ここで図鑑へ記録・永続化する（フェーズ3）。
+    const collected = opts.onCollect(item.id);
+    showResult(item, fx, collected);
     await sleep(t.reveal);
 
     // ⑦ 結果表示完了
@@ -104,11 +116,20 @@ export function mountGachaScreen(root: HTMLElement): void {
     hint.textContent = "タップでつぎへ";
   }
 
-  function showResult(item: ItemDef, fx: (typeof RARITY_EFFECT)[ItemDef["rarity"]]): void {
+  function showResult(
+    item: ItemDef,
+    fx: (typeof RARITY_EFFECT)[ItemDef["rarity"]],
+    collected: { isNew: boolean; count: number },
+  ): void {
     // 絵文字表示（assetUrl への差し替えは将来）。レアならバッジを添える。
     const badge = fx.label ? `<div class="result__rarity">${fx.label}</div>` : "";
+    // 初回は「NEW!」、ダブりは「○こめ！」（REQUIREMENTS.md 7：集める動機付け）。
+    const status = collected.isNew
+      ? `<div class="result__new">NEW!</div>`
+      : `<div class="result__dupe">${collected.count}こめ！</div>`;
     result.innerHTML = `
       ${badge}
+      ${status}
       <div class="result__item">${item.emoji}</div>
       <div class="result__got">ゲット！</div>
       <div class="result__name">${item.nameJa}</div>
@@ -134,11 +155,6 @@ export function mountGachaScreen(root: HTMLElement): void {
   stage.addEventListener("click", () => {
     if (phase === "result") reset();
   });
-}
-
-/** 必須要素を取得する小ヘルパ（無ければ即エラーで早期発見）。 */
-function must<T extends Element>(root: ParentNode, selector: string): T {
-  const el = root.querySelector<T>(selector);
-  if (!el) throw new Error(`要素が見つかりません: ${selector}`);
-  return el;
+  // 図鑑へ（stage の外に置くため、上の「つぎへ」タップとは競合しない）。
+  zukanButton.addEventListener("click", () => opts.onOpenZukan());
 }

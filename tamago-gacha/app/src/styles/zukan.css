@@ -1,0 +1,266 @@
+/* 図鑑画面・詳細モーダル（素のDOM + CSS grid/flex）。
+   transform / opacity 中心、hover非依存、タップ領域を大きく（CLAUDE.md §7）。 */
+
+.zukan {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #aee6ff 0%, #cdeffd 45%, #d9f7e6 100%);
+}
+
+/* 上部バー：戻る／タイトル／コンプリート率 */
+.zukan__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: calc(0.6rem + env(safe-area-inset-top)) clamp(0.6rem, 3vw, 1.4rem) 0.6rem;
+}
+.zukan__back {
+  font-weight: 800;
+  font-size: clamp(0.95rem, 3vw, 1.3rem);
+  color: #fff;
+  background: #5aa0e0;
+  padding: 0.5em 1em;
+  border-radius: 999px;
+  box-shadow: 0 3px 0 #3d7fbd, 0 5px 10px rgba(0, 0, 0, 0.15);
+}
+.zukan__back:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #3d7fbd, 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+.zukan__title {
+  font-weight: 900;
+  font-size: clamp(1.2rem, 4.5vw, 2rem);
+  color: #5b3a1a;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.zukan__progress {
+  font-weight: 700;
+  font-size: clamp(0.95rem, 3vw, 1.3rem);
+  color: #3a6ea5;
+}
+.zukan__progress strong {
+  font-size: 1.3em;
+  color: #ff4f87;
+}
+
+/* 全コンプお祝い */
+.zukan__complete {
+  flex: 0 0 auto;
+  margin: 0 clamp(0.6rem, 3vw, 1.4rem);
+  padding: 0.5em 1em;
+  text-align: center;
+  font-weight: 900;
+  font-size: clamp(1rem, 3.5vw, 1.6rem);
+  color: #fff;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #ff5f6d, #ffc371, #86ff7a, #7afcff, #c97bff);
+  background-size: 300% 100%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  animation: zukan-rainbow 3s linear infinite;
+}
+@keyframes zukan-rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+/* カテゴリ別フィルタ */
+.zukan__filters {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.6rem clamp(0.6rem, 3vw, 1.4rem);
+}
+.zukan__filter {
+  font-weight: 800;
+  font-size: clamp(0.9rem, 2.8vw, 1.2rem);
+  color: #5b3a1a;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.45em 1em;
+  border-radius: 999px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+.zukan__filter.is-active {
+  color: #fff;
+  background: #ff8fb3;
+  box-shadow: 0 2px 0 #e06a92, 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* グリッド（スクロール領域） */
+.zukan__grid {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(5rem, 22vw, 8rem), 1fr));
+  gap: clamp(0.5rem, 2vw, 1rem);
+  padding: clamp(0.6rem, 3vw, 1.4rem);
+  padding-bottom: calc(1.4rem + env(safe-area-inset-bottom));
+  align-content: start;
+}
+
+/* マス（取得済み＝ボタン／未取得＝div） */
+.zukan__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+  aspect-ratio: 1 / 1;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+.zukan__cell.is-got {
+  border: 3px solid #ffd34e;
+}
+.zukan__cell.is-got:active {
+  transform: scale(0.95);
+}
+.zukan__emoji {
+  font-size: min(11vw, 3rem);
+  line-height: 1;
+}
+.zukan__name {
+  font-weight: 700;
+  font-size: clamp(0.7rem, 2.4vw, 1rem);
+  color: #5b3a1a;
+  text-align: center;
+  line-height: 1.1;
+  padding: 0 0.2em;
+}
+
+/* 取得個数バッジ（×2 以上のとき） */
+.zukan__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-weight: 900;
+  font-size: clamp(0.7rem, 2.4vw, 1rem);
+  color: #fff;
+  background: #ff4f87;
+  padding: 0.1em 0.5em;
+  border-radius: 999px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 未取得：？ で隠す（名前・カテゴリ・レア度は出さない） */
+.zukan__cell.is-locked {
+  background: rgba(255, 255, 255, 0.55);
+  border: 3px dashed rgba(91, 58, 26, 0.25);
+}
+.zukan__q {
+  font-weight: 900;
+  font-size: min(12vw, 3.2rem);
+  color: rgba(91, 58, 26, 0.4);
+}
+
+/* レア度の枠色（取得済みのみ） */
+.zukan__cell.is-got[data-rarity="rare"] {
+  border-color: #1d8fff;
+  box-shadow: 0 0 0 1px #1d8fff, 0 3px 8px rgba(29, 143, 255, 0.3);
+}
+.zukan__cell.is-got[data-rarity="superRare"] {
+  border-color: #ffb300;
+  box-shadow: 0 0 0 1px #ffb300, 0 3px 10px rgba(255, 179, 0, 0.4);
+}
+
+/* ===== 詳細モーダル ===== */
+.detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+  animation: modal-fade 180ms ease-out both;
+}
+@keyframes modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.detail-modal__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  width: min(86vw, 22rem);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: clamp(1.2rem, 5vw, 2rem);
+  background: #fffdf7;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: modal-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes modal-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.detail-modal__close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.6rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  background: #ff8fb3;
+  border-radius: 999px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.detail-modal__emoji {
+  font-size: min(40vw, 9rem);
+  line-height: 1;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+}
+.detail-modal__rarity {
+  font-weight: 900;
+  font-size: clamp(1rem, 4vw, 1.5rem);
+}
+.detail-modal[data-rarity="common"] .detail-modal__rarity { color: #8a6a3a; }
+.detail-modal[data-rarity="rare"] .detail-modal__rarity { color: #1d8fff; }
+.detail-modal[data-rarity="superRare"] .detail-modal__rarity {
+  background: linear-gradient(90deg, #ff5f6d, #ffc371, #86ff7a, #7afcff, #c97bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.detail-modal__name-ja {
+  font-weight: 900;
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  color: #5b3a1a;
+}
+.detail-modal__name-en {
+  font-weight: 700;
+  font-size: clamp(1.1rem, 4.5vw, 1.8rem);
+  color: #3a6ea5;
+}
+.detail-modal__count {
+  margin-top: 0.3em;
+  font-weight: 700;
+  font-size: clamp(1rem, 3.5vw, 1.4rem);
+  color: #5b3a1a;
+  background: #fff0c2;
+  padding: 0.3em 1em;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zukan__complete { animation: none; }
+  .detail-modal,
+  .detail-modal__card { animation-duration: 120ms; }
+  .zukan__cell.is-got:active { transform: none; }
+}
