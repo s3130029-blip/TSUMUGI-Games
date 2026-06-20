@@ -1,6 +1,8 @@
 /* ============================================================
    app.js  -  メイン制御
    各モジュールをつないで、ツール・描画・UI を動かす。
+   ・iPad 横画面を主対象
+   ・色 / 太さ はポップアップで選ぶ(描画スペースを最大化)
    ============================================================ */
 
 import { COLORS, SIZES, STAMPS, BACKGROUNDS, TEMPLATES, TOOLS } from './data.js';
@@ -18,6 +20,7 @@ const state = {
   size: SIZES[1],
   stamp: STAMPS[0],
   randomStamp: false,
+  panel: null,          // 開いているポップアップの種類
 };
 
 const layers = new Layers();
@@ -29,9 +32,7 @@ const stroke = { active: false, pointerId: null, x: 0, y: 0, hue: 0, moved: fals
 
 // ---------- 初期化 ----------
 function init() {
-  buildTools();
-  buildPalette();
-  buildSizes();
+  buildToolbar();
 
   layers.setBackground(BACKGROUNDS[0]);
   layers.resize();
@@ -43,10 +44,8 @@ function init() {
   bindPointer();
   bindButtons();
   selectTool('pen');
-
-  // 初期の いろ・ふとさ をハイライト
-  document.querySelector(`.swatch[data-color="${state.color}"]`)?.classList.add('selected');
-  document.querySelector(`.size-btn[data-size="${state.size}"]`)?.classList.add('selected');
+  updateColorBtn();
+  updateSizeBtn();
 
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', onResize);
@@ -58,54 +57,79 @@ function onResize() {
   layers.resize();
 }
 
-// ---------- UI 構築 ----------
-function buildTools() {
-  const wrap = document.getElementById('tools');
+// ---------- ツールバー構築 ----------
+function buildToolbar() {
+  const wrap = document.getElementById('toolbar');
   wrap.innerHTML = '';
-  for (const t of TOOLS) {
-    const b = document.createElement('button');
-    b.className = 'btn tool';
-    b.dataset.tool = t.id;
-    b.innerHTML = `<span class="ico">${t.icon}</span><span class="lbl">${t.label}</span>`;
-    b.addEventListener('click', () => onToolClick(t.id));
-    wrap.appendChild(b);
+
+  // 描くツール
+  for (const t of TOOLS.filter((t) => DRAW_TOOLS.includes(t.id))) {
+    wrap.appendChild(toolButton(t));
+  }
+  // いろ・ふとさ(ポップアップ)
+  wrap.appendChild(makeColorButton());
+  wrap.appendChild(makeSizeButton());
+  wrap.appendChild(sep());
+  // ぬりえ・はいけい(ポップアップ)
+  for (const t of TOOLS.filter((t) => !DRAW_TOOLS.includes(t.id))) {
+    wrap.appendChild(toolButton(t));
   }
 }
 
-function buildPalette() {
-  const wrap = document.getElementById('palette');
-  wrap.innerHTML = '';
-  for (const c of COLORS) {
-    const b = document.createElement('button');
-    b.className = 'swatch';
-    b.style.background = c;
-    b.dataset.color = c;
-    b.addEventListener('click', () => onColorClick(c, b));
-    wrap.appendChild(b);
-  }
+function toolButton(t) {
+  const b = document.createElement('button');
+  b.className = 'btn tool';
+  b.dataset.tool = t.id;
+  b.innerHTML = `<span class="ico">${t.icon}</span><span class="lbl">${t.label}</span>`;
+  b.addEventListener('click', () => onToolClick(t.id));
+  return b;
 }
 
-function buildSizes() {
-  const wrap = document.getElementById('sizes');
-  wrap.innerHTML = '';
-  for (const s of SIZES) {
-    const b = document.createElement('button');
-    b.className = 'size-btn';
-    b.dataset.size = s;
-    const d = Math.max(8, Math.min(s, 30));
-    b.innerHTML = `<span class="dot" style="width:${d}px;height:${d}px"></span>`;
-    b.addEventListener('click', () => onSizeClick(s, b));
-    wrap.appendChild(b);
+function makeColorButton() {
+  const b = document.createElement('button');
+  b.className = 'btn';
+  b.id = 'color-btn';
+  b.innerHTML = `<span class="color-preview"></span><span class="lbl">いろ</span>`;
+  b.addEventListener('click', () => { sound.tap(); togglePanel('color', buildColorBody, 'いろ'); });
+  return b;
+}
+
+function makeSizeButton() {
+  const b = document.createElement('button');
+  b.className = 'btn';
+  b.id = 'size-btn';
+  b.innerHTML = `<span class="size-preview"><span class="dot"></span></span><span class="lbl">ふとさ</span>`;
+  b.addEventListener('click', () => { sound.tap(); togglePanel('size', buildSizeBody, 'ふとさ'); });
+  return b;
+}
+
+function sep() {
+  const s = document.createElement('span');
+  s.className = 'sep';
+  return s;
+}
+
+function updateColorBtn() {
+  const p = document.querySelector('#color-btn .color-preview');
+  if (p) p.style.background = state.color;
+}
+
+function updateSizeBtn() {
+  const d = document.querySelector('#size-btn .dot');
+  if (d) {
+    const px = Math.max(8, Math.min(state.size, 26));
+    d.style.width = px + 'px';
+    d.style.height = px + 'px';
   }
 }
 
 // ---------- ツール選択 ----------
 function onToolClick(id) {
   sound.tap();
-  if (id === 'coloring') { openTemplatePanel(); return; }
-  if (id === 'background') { openBackgroundPanel(); return; }
+  if (id === 'coloring') { togglePanel('coloring', buildTemplateBody, 'ぬりえ'); return; }
+  if (id === 'background') { togglePanel('background', buildBackgroundBody, 'はいけい'); return; }
   selectTool(id);
-  if (id === 'stamp') openStampPanel();
+  if (id === 'stamp') togglePanel('stamp', buildStampBody, 'スタンプ');
   else closePanel();
 }
 
@@ -116,18 +140,149 @@ function selectTool(id) {
   );
 }
 
-function onColorClick(c, btn) {
-  sound.pop();
-  state.color = c;
-  document.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('selected', s === btn));
-  // 色を選んだら描けるツールに戻す
-  if (state.tool === 'eraser' || state.tool === 'rainbow') selectTool('pen');
+// ---------- ポップアップ パネル ----------
+function togglePanel(type, builder, title) {
+  if (state.panel === type) { closePanel(); return; }
+  state.panel = type;
+  document.getElementById('panel-title').textContent = title;
+  const panel = document.getElementById('panel');
+  panel.classList.remove('hidden');
+  panel.setAttribute('aria-hidden', 'false');
+  builder();
 }
 
-function onSizeClick(s, btn) {
-  sound.pop();
-  state.size = s;
-  document.querySelectorAll('.size-btn').forEach((b) => b.classList.toggle('selected', b === btn));
+function closePanel() {
+  state.panel = null;
+  const panel = document.getElementById('panel');
+  panel.classList.add('hidden');
+  panel.setAttribute('aria-hidden', 'true');
+}
+
+function panelBody() {
+  const body = document.getElementById('panel-body');
+  body.innerHTML = '';
+  return body;
+}
+
+// いろ
+function buildColorBody() {
+  const body = panelBody();
+  for (const c of COLORS) {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (state.color === c ? ' selected' : '');
+    b.style.background = c;
+    b.addEventListener('click', () => {
+      sound.pop();
+      state.color = c;
+      updateColorBtn();
+      // 色を選んだら描けるツールに戻す
+      if (state.tool === 'eraser' || state.tool === 'rainbow') selectTool('pen');
+      closePanel();
+    });
+    body.appendChild(b);
+  }
+}
+
+// ふとさ
+function buildSizeBody() {
+  const body = panelBody();
+  for (const s of SIZES) {
+    const b = document.createElement('button');
+    b.className = 'size-btn' + (state.size === s ? ' selected' : '');
+    const d = Math.max(8, Math.min(s, 34));
+    b.innerHTML = `<span class="dot" style="width:${d}px;height:${d}px;background:${state.color}"></span>`;
+    b.addEventListener('click', () => {
+      sound.pop();
+      state.size = s;
+      updateSizeBtn();
+      closePanel();
+    });
+    body.appendChild(b);
+  }
+}
+
+// スタンプ
+function buildStampBody() {
+  const body = panelBody();
+  const rnd = document.createElement('button');
+  rnd.className = 'pitem' + (state.randomStamp ? ' selected' : '');
+  rnd.innerHTML = '🎲';
+  rnd.title = 'ランダム';
+  rnd.addEventListener('click', () => {
+    state.randomStamp = true;
+    sound.pop();
+    closePanel();
+  });
+  body.appendChild(rnd);
+
+  for (const s of STAMPS) {
+    const b = document.createElement('button');
+    b.className = 'pitem' + (!state.randomStamp && state.stamp === s ? ' selected' : '');
+    b.textContent = s;
+    b.addEventListener('click', () => {
+      state.stamp = s;
+      state.randomStamp = false;
+      sound.pop();
+      closePanel();
+    });
+    body.appendChild(b);
+  }
+}
+
+// ぬりえ
+function buildTemplateBody() {
+  const body = panelBody();
+  const none = document.createElement('button');
+  none.className = 'pitem';
+  none.innerHTML = '🚫';
+  none.title = 'なし';
+  none.addEventListener('click', () => {
+    layers.setTemplate(null);
+    sound.pop();
+    closePanel();
+    selectTool('pen');
+  });
+  body.appendChild(none);
+
+  for (const t of TEMPLATES) {
+    const b = document.createElement('button');
+    b.className = 'pitem';
+    b.innerHTML = t.svg;
+    b.title = t.label;
+    b.addEventListener('click', () => {
+      loadTemplate(t);
+      sound.pop();
+      closePanel();
+      selectTool('pen'); // 線画を選んだら ペンで色を塗れるように
+    });
+    body.appendChild(b);
+  }
+}
+
+function loadTemplate(t) {
+  const img = new Image();
+  img.onload = () => layers.setTemplate(img);
+  img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(t.svg);
+}
+
+// はいけい
+function buildBackgroundBody() {
+  const body = panelBody();
+  for (const bg of BACKGROUNDS) {
+    const b = document.createElement('button');
+    b.className = 'pitem';
+    b.style.background = bg.value;
+    b.style.fontSize = '13px';
+    b.style.fontWeight = '800';
+    b.style.color = bg.id === 'night' ? '#fff' : '#555';
+    b.textContent = bg.label;
+    b.addEventListener('click', () => {
+      layers.setBackground(bg);
+      sound.pop();
+      closePanel();
+    });
+    body.appendChild(b);
+  }
 }
 
 // ---------- ポインタ(描画) ----------
@@ -146,7 +301,9 @@ function getPoint(e) {
 }
 
 function onPointerDown(e) {
-  if (stroke.active) return;            // 同時に1本だけ(誤操作防止)
+  // パネルが開いているときは描かずに閉じる(誤描画防止)
+  if (state.panel) { e.preventDefault(); closePanel(); return; }
+  if (stroke.active) return;            // 同時に1本だけ
   e.preventDefault();
   sound._ensure();                      // 最初のタッチで音声を有効化
   layers.draw.setPointerCapture(e.pointerId);
@@ -200,7 +357,6 @@ function onPointerUp(e) {
   stroke.active = false;
   stroke.pointerId = null;
   try { layers.draw.releasePointerCapture(e.pointerId); } catch {}
-  // 何か変化したら履歴に積む
   history.push();
 }
 
@@ -214,11 +370,7 @@ function strokeStyleNow() {
 }
 
 function applyMode(ctx) {
-  if (state.tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out';
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-  }
+  ctx.globalCompositeOperation = state.tool === 'eraser' ? 'destination-out' : 'source-over';
 }
 
 function drawDot(x, y) {
@@ -261,112 +413,6 @@ function placeStamp(x, y) {
   sound.stamp();
 }
 
-// ---------- パネル(スタンプ/ぬりえ/はいけい) ----------
-function openPanel(title) {
-  document.getElementById('panel-title').textContent = title;
-  const panel = document.getElementById('panel');
-  panel.classList.remove('hidden');
-  panel.setAttribute('aria-hidden', 'false');
-}
-function closePanel() {
-  const panel = document.getElementById('panel');
-  panel.classList.add('hidden');
-  panel.setAttribute('aria-hidden', 'true');
-}
-
-function openStampPanel() {
-  openPanel('スタンプ');
-  const body = document.getElementById('panel-body');
-  body.innerHTML = '';
-
-  // ランダム スタンプ
-  const rnd = document.createElement('button');
-  rnd.className = 'pitem' + (state.randomStamp ? ' selected' : '');
-  rnd.innerHTML = '🎲';
-  rnd.title = 'ランダム';
-  rnd.addEventListener('click', () => {
-    state.randomStamp = true;
-    sound.pop();
-    body.querySelectorAll('.pitem').forEach((i) => i.classList.remove('selected'));
-    rnd.classList.add('selected');
-  });
-  body.appendChild(rnd);
-
-  for (const s of STAMPS) {
-    const b = document.createElement('button');
-    b.className = 'pitem' + (!state.randomStamp && state.stamp === s ? ' selected' : '');
-    b.textContent = s;
-    b.addEventListener('click', () => {
-      state.stamp = s;
-      state.randomStamp = false;
-      sound.pop();
-      body.querySelectorAll('.pitem').forEach((i) => i.classList.remove('selected'));
-      b.classList.add('selected');
-    });
-    body.appendChild(b);
-  }
-}
-
-function openTemplatePanel() {
-  openPanel('ぬりえ');
-  const body = document.getElementById('panel-body');
-  body.innerHTML = '';
-
-  // 「なし」(線画クリア)
-  const none = document.createElement('button');
-  none.className = 'pitem';
-  none.innerHTML = '🚫';
-  none.title = 'なし';
-  none.addEventListener('click', () => {
-    layers.setTemplate(null);
-    sound.pop();
-    closePanel();
-    selectTool('pen');
-  });
-  body.appendChild(none);
-
-  for (const t of TEMPLATES) {
-    const b = document.createElement('button');
-    b.className = 'pitem';
-    b.innerHTML = t.svg;
-    b.title = t.label;
-    b.addEventListener('click', () => {
-      loadTemplate(t);
-      sound.pop();
-      closePanel();
-      selectTool('pen'); // 線画を選んだら ペンで色を塗れるように
-    });
-    body.appendChild(b);
-  }
-}
-
-function loadTemplate(t) {
-  const img = new Image();
-  img.onload = () => layers.setTemplate(img);
-  img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(t.svg);
-}
-
-function openBackgroundPanel() {
-  openPanel('はいけい');
-  const body = document.getElementById('panel-body');
-  body.innerHTML = '';
-  for (const bg of BACKGROUNDS) {
-    const b = document.createElement('button');
-    b.className = 'pitem';
-    b.style.background = bg.value;
-    b.style.fontSize = '13px';
-    b.style.fontWeight = '800';
-    b.style.color = bg.id === 'night' ? '#fff' : '#555';
-    b.textContent = bg.label;
-    b.addEventListener('click', () => {
-      layers.setBackground(bg);
-      sound.pop();
-      closePanel();
-    });
-    body.appendChild(b);
-  }
-}
-
 // ---------- 上部アクション ----------
 function bindButtons() {
   document.querySelectorAll('[data-action]').forEach((b) => {
@@ -398,6 +444,7 @@ function updateUndoRedo(canUndo, canRedo) {
 // 全消し(確認モーダル)
 function askClear() {
   sound.tap();
+  closePanel();
   document.getElementById('modal').classList.remove('hidden');
 }
 function hideModal() {
@@ -412,6 +459,7 @@ function doClear() {
 
 // PNG 保存
 function savePng() {
+  closePanel();
   sound.save();
   const out = layers.flatten();
   out.toBlob((blob) => {
@@ -458,7 +506,7 @@ function toggleFullscreen() {
 
 // ---------- Service Worker(オフライン対応) ----------
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./service-worker.js').catch(() => {});
     });

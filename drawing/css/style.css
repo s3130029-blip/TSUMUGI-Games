@@ -36,6 +36,7 @@ html, body {
 }
 
 #app {
+  position: relative;          /* パネルの位置基準 */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -107,7 +108,7 @@ html, body {
 #stage {
   position: relative;
   flex: 1;
-  margin: 8px;
+  margin: 6px;
   border-radius: 22px;
   overflow: hidden;
   background: #fff;
@@ -127,31 +128,58 @@ html, body {
 
 /* ---------- 下部バー ---------- */
 #bottombar {
+  position: relative;          /* パネルの位置基準 */
   background: var(--bar);
-  padding: 8px 10px calc(8px + var(--safe-bottom));
+  padding: 6px 8px calc(6px + var(--safe-bottom));
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   z-index: 5;
 }
 
-.tools, .palette, .sizes {
+/* ツールバー: iPad横では1行。狭い画面では折り返して全ボタンを表示 */
+.toolbar {
   display: flex;
   gap: 6px;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
+}
+.toolbar .sep {
+  flex: 0 0 auto;
+  width: 2px;
+  align-self: stretch;
+  margin: 6px 4px;
+  background: #eee;
+  border-radius: 2px;
+}
+.toolbar .btn { flex: 0 0 auto; }
+
+/* 「いろ」「ふとさ」ボタンの現在値プレビュー */
+.color-preview {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #ddd;
+}
+.size-preview {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
+.size-preview .dot { background: var(--ink); border-radius: 50%; }
 
 /* 色ボタン */
 .swatch {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   border: 4px solid #fff;
   box-shadow: var(--shadow);
   cursor: pointer;
   padding: 0;
+  margin: auto;       /* パネルのグリッド内で中央寄せ */
 }
 .swatch.selected {
   outline: 4px solid var(--ink);
@@ -164,8 +192,8 @@ html, body {
 
 /* ふとさボタン */
 .size-btn {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: #f1f1f6;
   border: none;
@@ -174,6 +202,7 @@ html, body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  margin: auto;       /* パネルのグリッド内で中央寄せ */
 }
 .size-btn .dot { background: var(--ink); border-radius: 50%; }
 .size-btn.selected { background: var(--accent2); outline: 4px solid #ffb703; outline-offset: -4px; }
@@ -183,11 +212,11 @@ html, body {
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: 8px;
-  max-height: 50%;
+  bottom: calc(100% + 4px);   /* ツールバーの真上(バーの高さに追従) */
+  max-height: 56vh;
   background: #fff;
   border-radius: 22px;
-  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -267,10 +296,11 @@ html, body {
   .brand { font-size: 18px; }
 }
 
-/* 横向きで縦スペースが狭いとき */
-@media (max-height: 480px) {
+/* 横向きで縦スペースが狭いとき(スマホ横など)はバーを薄くして描画を広く */
+@media (max-height: 600px) {
   .btn .lbl { display: none; }
-  :root { --btn-size: 52px; }
+  :root { --btn-size: 54px; }
+  #topbar { padding-top: calc(4px + var(--safe-top)); padding-bottom: 4px; }
 }
 
 /* 入力デバイスがマウスのときホバー */

@@ -48,20 +48,17 @@
       <canvas id="overlay-layer"></canvas> <!-- ぬりえの線画(上に重ねる) -->
     </main>
 
-    <!-- ポップアップ パネル(スタンプ/ぬりえ/はいけい) -->
-    <section id="panel" class="panel hidden" aria-hidden="true">
-      <div class="panel-head">
-        <span id="panel-title">スタンプ</span>
-        <button class="btn panel-close" data-action="close-panel" aria-label="とじる">✕</button>
-      </div>
-      <div id="panel-body" class="panel-body"></div>
-    </section>
-
-    <!-- 下部ツールバー: ツール・いろ・ふとさ -->
+    <!-- 下部ツールバー: 1行に集約(色・太さはポップアップ) -->
     <footer id="bottombar">
-      <div class="tools" id="tools"></div>
-      <div class="palette" id="palette"></div>
-      <div class="sizes" id="sizes"></div>
+      <!-- ポップアップ パネル(いろ/ふとさ/スタンプ/ぬりえ/はいけい): ツールバーの真上に出す -->
+      <section id="panel" class="panel hidden" aria-hidden="true">
+        <div class="panel-head">
+          <span id="panel-title">いろ</span>
+          <button class="btn panel-close" data-action="close-panel" aria-label="とじる">✕</button>
+        </div>
+        <div id="panel-body" class="panel-body"></div>
+      </section>
+      <div class="toolbar" id="toolbar"></div>
     </footer>
   </div>
 
