@@ -257,10 +257,27 @@
   padding: 0.3em 1em;
   border-radius: 999px;
 }
+/* 読み上げボタン（フェーズ4）。子どもの指でも押しやすいよう大きめに。 */
+.detail-modal__speak {
+  margin-top: 0.7em;
+  min-height: 3rem;
+  padding: 0.5em 1.4em;
+  font-weight: 900;
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  color: #fff;
+  background: linear-gradient(180deg, #5fb8ff, #2f8fe6);
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(47, 143, 230, 0.45);
+  transition: transform 80ms ease-out;
+}
+.detail-modal__speak:active {
+  transform: scale(0.94);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .zukan__complete { animation: none; }
   .detail-modal,
   .detail-modal__card { animation-duration: 120ms; }
   .zukan__cell.is-got:active { transform: none; }
+  .detail-modal__speak:active { transform: none; }
 }

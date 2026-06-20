@@ -79,7 +79,9 @@ export function mountZukanScreen(root: HTMLElement, opts: ZukanScreenOptions): v
           <span class="zukan__name">${item.nameJa}</span>
           ${count > 1 ? `<span class="zukan__count">×${count}</span>` : ""}
         `;
-        cell.addEventListener("click", () => openDetailModal(item, count));
+        cell.addEventListener("click", () =>
+          openDetailModal(item, count, { speechEnabled: save.settings.speechEnabled }),
+        );
         grid.appendChild(cell);
       } else {
         // 未取得：何が出るか分からないよう「？」だけ（名前・カテゴリ・レア度を伏せる）。

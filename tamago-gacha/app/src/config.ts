@@ -56,3 +56,12 @@ export const RARITY_EFFECT: Record<
 
 /** localStorage の保存キー（フェーズ3で使用）。スキーマ更新時はサフィックスを上げる。 */
 export const SAVE_KEY = "tamago-gacha:save:v1";
+
+/**
+ * 読み上げ速度（SpeechSynthesisUtterance.rate）。フェーズ4。
+ * 子どもが聞き取りやすいよう、既定の 1.0 より少しゆっくりにする。
+ */
+export const SPEECH_RATE = {
+  ja: 0.95,
+  en: 0.85,
+} as const;

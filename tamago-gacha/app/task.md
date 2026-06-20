@@ -51,9 +51,12 @@
 - 永続的な NEW バッジ（既読で消す未読フラグ管理）は未実装。今回は取得直後の「NEW!」表示のみ。
 - 図鑑からの読み上げ（フェーズ4）、データリセット・設定（フェーズ5）。
 
-## フェーズ4：日英読み上げ
-- [ ] `audio/speech.ts`：Web Speech API（`voiceschanged` 待ち・フォールバック）
-- [ ] 図鑑詳細タップで 日本語名 → 英語名 の順に読み上げ
+## フェーズ4：日英読み上げ  ← 完了（実機での音声確認のみ残）
+- [x] `audio/speech.ts`：Web Speech API（`isSpeechSupported`／`pickVoice`＝純粋関数・テスト対象／`initSpeech` で voiceschanged 購読・音声温め／`speakJaThenEn` で進行中キャンセル＋中断可）。未対応端末は名前テキスト表示でフォールバック
+- [x] 図鑑詳細を開いた瞬間に 日本語名 → 英語名 を自動読み上げ＋「🔊 よんで」で再生。閉じる時に発話キャンセル。`speechEnabled` 設定を尊重
+- [x] `config.ts` に `SPEECH_RATE`（子ども向けに少しゆっくり）を追加。`main.ts` 起動時に `initSpeech()`
+- [x] `tests/speech.test.ts`（`pickVoice` の一致優先順位・正規化・該当なし）。型エラー0・テスト全緑・build 確認
+- [ ] **iPad 横 Safari 実機での音声確認**（ja→en の発話・音声の有無／※開発環境では実行不可＝ユーザー確認項目）
 
 ## フェーズ5：仕上げ
 - [ ] `audio/sfx.ts`：Web Audio 合成音（タップ/パカッ/キラーン/レアジングル）
