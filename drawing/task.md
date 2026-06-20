@@ -103,4 +103,18 @@
 - [x] css: .panel-section（グリッド全幅の見出し）
 - [x] service-worker キャッシュ v5
 - [x] 検証（合計108個・重複なし・テンプレ寸法あり）
+- [x] GitHub へ反映（f7ea134）
+
+---
+
+# 追加タスク（2026-06-20）: スタンプパネルが重なる不具合
+
+## 不具合
+- 108個を詰め込んだ結果、パネルが内部スクロールせず溢れ、スタンプが重なって見えない。
+
+## 修正
+- [x] .panel-body に flex:1 / min-height:0 / align-content:start（flex子要素のスクロール有効化）
+- [x] .panel max-height 56vh→70vh（表示領域拡大）
+- [x] .pitem に min-height:64px（aspect-ratio未対応の古いiOSでも潰れない保険）
+- [x] service-worker キャッシュ v6
 - [ ] GitHub へ反映
