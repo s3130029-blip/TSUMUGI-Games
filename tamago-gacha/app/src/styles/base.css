@@ -1,0 +1,56 @@
+/* リセット＋iPad/iOS Safari 向けの誤操作対策（CLAUDE.md §7 / REQUIREMENTS.md 8）。 */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  /* ページスクロール・バウンスを抑制 */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  color: #5b3a1a;
+  /* ダブルタップズーム等を抑制（誤操作対策） */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  /* テキスト選択・長押しメニューを抑制（子どもの誤操作対策） */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* セーフエリアを考慮した全画面ルート */
+#app {
+  width: 100%;
+  height: 100%;
+  /* iOS の動的ツールバーに強い単位。未対応環境は vh にフォールバック */
+  height: 100vh;
+  height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+img,
+svg {
+  -webkit-user-drag: none;
+  user-select: none;
+}

@@ -1,0 +1,96 @@
+/* SVGタマゴの見た目とアニメ（CLAUDE.md §4）。
+   動きは各 <g> への CSS transform で付ける。transform-box: fill-box で
+   要素自身のバウンディングボックスを基準に transform-origin を取る（iOS Safari 対応）。 */
+
+.egg-svg {
+  /* 横画面・縦画面どちらでも大きく見えるサイズ */
+  width: min(64vw, 46vh);
+  height: auto;
+  display: block;
+  overflow: visible; /* 開いた上半分が viewBox 外へ出ても切れないように */
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.18));
+}
+
+.egg-shell {
+  stroke-width: 2.5;
+}
+
+/* transform の基準を要素自身のボックスにする */
+.egg-shake,
+.egg-top,
+.egg-bottom {
+  transform-box: fill-box;
+}
+
+/* 待機中：呼吸するような微アニメ（押したくなる見た目） */
+.gacha__stage[data-phase="idle"] .egg-shake {
+  transform-origin: 50% 92%;
+  animation: egg-breathe 2.6s ease-in-out infinite;
+}
+@keyframes egg-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-1.5%) scale(1.025); }
+}
+
+/* ① 予兆：スクワッシュ&ストレッチ */
+.egg-shake.is-squash {
+  transform-origin: 50% 100%;
+  animation: egg-squash 180ms ease-out;
+}
+@keyframes egg-squash {
+  0% { transform: scale(1, 1); }
+  45% { transform: scale(1.12, 0.86); }
+  100% { transform: scale(1, 1); }
+}
+
+/* ②③ 振動：だんだん激しく揺れる雰囲気（ループ） */
+.egg-shake.is-shaking {
+  transform-origin: 50% 92%;
+  animation: egg-shake 0.45s ease-in-out infinite;
+}
+@keyframes egg-shake {
+  0% { transform: rotate(0deg) translateX(0); }
+  15% { transform: rotate(-6deg) translateX(-2px); }
+  30% { transform: rotate(5deg) translateX(2px); }
+  45% { transform: rotate(-5deg) translateX(-2px); }
+  60% { transform: rotate(4deg) translateX(1px); }
+  75% { transform: rotate(-3deg) translateX(-1px); }
+  100% { transform: rotate(0deg) translateX(0); }
+}
+
+/* ③ ひび割れ：pathLength=1 なので dashoffset 1（隠れる）→ 0（描画）でひびが広がる */
+.egg-crack {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.egg-crack.is-cracking {
+  transition: stroke-dashoffset var(--crack-dur, 1000ms) ease-in;
+  stroke-dashoffset: 0;
+}
+
+/* ④ パカッ：上半分が勢いよく開く／下半分は少し沈む */
+.egg-top {
+  transform-origin: 50% 96%;
+  transition: transform var(--open-dur, 220ms) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.egg-top.is-open {
+  transform: translateY(-48%) rotate(-16deg);
+}
+.egg-bottom {
+  transform-origin: 50% 50%;
+  transition: transform var(--open-dur, 220ms) ease-out;
+}
+.egg-bottom.is-open {
+  transform: translateY(5%) scale(1.02);
+}
+
+/* 演出控えめモード：揺れを穏やかに（開く動きは時間短縮で残す） */
+@media (prefers-reduced-motion: reduce) {
+  .gacha__stage[data-phase="idle"] .egg-shake { animation: none; }
+  .egg-shake.is-squash { animation: none; }
+  .egg-shake.is-shaking { animation: egg-shake-soft 0.6s ease-in-out infinite; }
+  @keyframes egg-shake-soft {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-2.5deg); }
+  }
+}
