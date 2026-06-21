@@ -9,7 +9,7 @@ import { burstSparkles } from "./effects/sparkle";
 import { eggSvgMarkup, applyEggPalette } from "./svg-egg";
 import { must } from "./dom";
 import { playSfx } from "../audio/sfx";
-import { isSpeechSupported, primeSpeech, speakJaThenEn } from "../audio/speech";
+import { isSpeechSupported, primeSpeech, speakEnThenJa } from "../audio/speech";
 
 /** 演出の進行状態。idle のときだけ次のガチャを受け付ける（連打対策）。 */
 type Phase = "idle" | "playing" | "result";
@@ -132,8 +132,8 @@ export function mountGachaScreen(root: HTMLElement, opts: GachaScreenOptions): v
     if (item.rarity === "rare") playSfx("rareJingle");
     else if (item.rarity === "superRare") playSfx("superJingle");
     showResult(item, fx, collected);
-    // ⑦ モノの名前を「日本語 → 英語」の順に読み上げる（図鑑の詳細と同じ学びの要素）。
-    if (canSpeak) speakJaThenEn(item.nameJa, item.nameEn);
+    // ⑦ モノの名前を「英語 → 日本語」の順に読み上げる（図鑑の詳細と同じ学びの要素）。
+    if (canSpeak) speakEnThenJa(item.nameJa, item.nameEn);
     await sleep(t.reveal);
 
     // ⑦ 結果表示完了

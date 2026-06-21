@@ -1,10 +1,10 @@
 // アイテム詳細モーダル（REQUIREMENTS.md 6.3）。
 // 拡大表示・日本語名・英語名・レア度・取得個数を出す。
-// フェーズ4：開いた瞬間に「日本語名→英語名」を読み上げ、「🔊 よんで」ボタンで再生できる。
+// フェーズ4：開いた瞬間に「英語名→日本語名」を読み上げ、「🔊 よんで」ボタンで再生できる。
 import type { ItemDef } from "../data/items";
 import { RARITY_LABEL } from "./labels";
 import { must } from "./dom";
-import { isSpeechSupported, speakJaThenEn, cancelSpeak } from "../audio/speech";
+import { isSpeechSupported, speakEnThenJa, cancelSpeak } from "../audio/speech";
 
 /** 詳細モーダルのオプション。 */
 export interface DetailModalOptions {
@@ -47,14 +47,14 @@ export function openDetailModal(item: ItemDef, count: number, opts: DetailModalO
   must<HTMLButtonElement>(overlay, ".detail-modal__close").addEventListener("click", close);
 
   if (canSpeak) {
-    // 連打しても破綻しないよう、speakJaThenEn は内部で進行中をキャンセルしてから読み直す。
+    // 連打しても破綻しないよう、speakEnThenJa は内部で進行中をキャンセルしてから読み直す。
     must<HTMLButtonElement>(overlay, ".detail-modal__speak").addEventListener("click", () => {
-      speakJaThenEn(item.nameJa, item.nameEn);
+      speakEnThenJa(item.nameJa, item.nameEn);
     });
   }
 
   document.body.appendChild(overlay);
 
   // 開いた瞬間に自動で読み上げ（タップ起点なので iOS でも発話可能）。
-  if (canSpeak) speakJaThenEn(item.nameJa, item.nameEn);
+  if (canSpeak) speakEnThenJa(item.nameJa, item.nameEn);
 }

@@ -116,13 +116,13 @@ export function primeSpeech(): void {
 }
 
 /**
- * 日本語名 → 英語名 の順に読み上げる（REQUIREMENTS.md 4.4 のメイン用途）。
+ * 英語名 → 日本語名 の順に読み上げる（REQUIREMENTS.md 4.4 のメイン用途）。
  * 速度は config の SPEECH_RATE を使う。戻り値で中断できる。
  */
-export function speakJaThenEn(nameJa: string, nameEn: string): CancelSpeak {
+export function speakEnThenJa(nameJa: string, nameEn: string): CancelSpeak {
   return speakSequence([
-    { text: nameJa, lang: "ja-JP", rate: SPEECH_RATE.ja },
     { text: nameEn, lang: "en-US", rate: SPEECH_RATE.en },
+    { text: nameJa, lang: "ja-JP", rate: SPEECH_RATE.ja },
   ]);
 }
 
