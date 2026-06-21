@@ -5,6 +5,11 @@
    ピンチ拡大が発動 →（user-scalable=no で）ピンチアウトで戻せなくなる不具合の原因。 */
 * { box-sizing: border-box; touch-action: none; }
 
+/* アイス（スクープ）の基準サイズ。main.js の fitBuilder() が積み場所(stage)の
+   大きさに合わせて実際の値を書き換える。これで iPhone などの狭い画面でも
+   最大段数のタワーが必ず収まる（コーン・ゴーストもこの変数に追従する）。 */
+:root { --scoop: 84px; }
+
 html, body {
   margin: 0;
   padding: 0;
@@ -240,9 +245,9 @@ body.mode-free  .order-only { display: none; }
   align-items: center;
 }
 .cone {
-  width: 92px;
-  height: 116px;
-  margin-top: -14px;                /* 一番下のアイスにめり込ませる */
+  width: calc(var(--scoop, 84px) * 1.1);
+  height: calc(var(--scoop, 84px) * 1.38);
+  margin-top: calc(var(--scoop, 84px) * -0.17); /* 一番下のアイスにめり込ませる */
   z-index: 0;
   background-color: #e0a96d;
   background-image:
@@ -253,8 +258,8 @@ body.mode-free  .order-only { display: none; }
 
 /* ========== アイス（スクープ） ========== */
 .scoop {
-  width: 84px;
-  height: 84px;
+  width: var(--scoop, 84px);
+  height: var(--scoop, 84px);
   border-radius: 50% 50% 46% 46%;
   position: relative;
   z-index: 1;
@@ -262,7 +267,7 @@ body.mode-free  .order-only { display: none; }
               inset -6px -8px 0 rgba(0,0,0,.10),
               0 2px 4px rgba(0,0,0,.12);
 }
-.stack .scoop { margin-top: -28px; }
+.stack .scoop { margin-top: calc(var(--scoop, 84px) * -0.33); }
 .stack .scoop:last-child { margin-top: 0; } /* column-reverse の最後＝一番下 */
 
 /* 見本のアイス（大きめ） */
@@ -404,12 +409,30 @@ body.mode-free  .order-only { display: none; }
   }
   .hud { flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
   .score, .hint { min-height: 0; }
+
+  /* 見本タワーが縦に伸びて上部バーが画面を食い、積み場所が潰れるのを防ぐ。
+     見本を小さくして上部を低く保つ（下→上の積み方の見え方は残す）。 */
+  .bubble { padding: 8px 12px 10px; }
+  .sample .scoop.small {
+    width: 30px;
+    height: 30px;
+    box-shadow: inset 4px 4px 0 rgba(255,255,255,.35), inset -3px -4px 0 rgba(0,0,0,.10);
+  }
+  .sample-stack .scoop.small { margin-top: -20px; }
+  .sample-stack .scoop.small:last-child { margin-top: 0; }
+  .sample-cone { width: 34px; height: 42px; margin-top: -6px; }
+}
+
+/* ========== 縦持ちスマホ：パレットをコンパクトにして折り返しを減らす ========== */
+@media (orientation: portrait) and (max-width: 600px) {
+  .palette-scoop { width: 44px; height: 44px; }
+  .palette-label { font-size: 11px; }
+  .palette { gap: 4px 8px; padding: 6px 8px 8px; }
 }
 
 /* ========== 低い画面（横画面の小さめ端末）の微調整 ========== */
+/* アイス／コーンのサイズは main.js の fitBuilder() が画面に合わせて
+   自動調整するのでここでは触らない。パレットだけ少し詰める。 */
 @media (max-height: 560px) {
-  .scoop { width: 66px; height: 66px; }
-  .stack .scoop { margin-top: -22px; }
-  .cone { width: 78px; height: 96px; }
   .palette-scoop { width: 50px; height: 50px; }
 }

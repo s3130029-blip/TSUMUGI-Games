@@ -5,18 +5,21 @@ var Input = (function () {
   var dropEl = null;         // ドロップ判定領域（コーン周り）
   var onPlace = null;        // 置いたとき
   var onRemove = null;       // 外すとき
-  var GHOST_HALF = 42;       // ゴーストの半径ぶん（中心を指に合わせる）
+  var ghostHalf = 42;        // ゴーストの半径ぶん（中心を指に合わせる。実サイズから毎回求める）
   var activeCleanup = null;  // 進行中ドラッグの後始末関数（中断時に強制実行して取り残しを防ぐ）
 
-  function makeGhost(flavor, x, y) {
+  // 指の座標(cx,cy)を中心にゴーストを作る。アイスサイズは --scoop で可変なので、
+  // 生成後に実寸を測って中心合わせのオフセット(ghostHalf)を更新する。
+  function makeGhost(flavor, cx, cy) {
     ghost = document.createElement('div');
     ghost.className = 'scoop ghost';
     ghost.style.backgroundColor = flavor.color;
     document.body.appendChild(ghost);
-    moveGhost(x, y);
+    ghostHalf = (ghost.offsetWidth / 2) || ghostHalf;
+    moveGhost(cx, cy);
   }
-  function moveGhost(x, y) {
-    if (ghost) ghost.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+  function moveGhost(cx, cy) {
+    if (ghost) ghost.style.transform = 'translate(' + (cx - ghostHalf) + 'px,' + (cy - ghostHalf) + 'px)';
   }
   function killGhost() {
     if (ghost) { ghost.remove(); ghost = null; }
@@ -53,11 +56,11 @@ var Input = (function () {
         var pid = e.pointerId;
         try { item.setPointerCapture(pid); } catch (_) {}
         removeAllGhosts(); // 念のため残骸を掃除してから始める
-        makeGhost(flavor, e.clientX - GHOST_HALF, e.clientY - GHOST_HALF);
+        makeGhost(flavor, e.clientX, e.clientY);
 
         function move(ev) {
           if (ev.pointerId !== pid) return; // 別の指は無視
-          moveGhost(ev.clientX - GHOST_HALF, ev.clientY - GHOST_HALF);
+          moveGhost(ev.clientX, ev.clientY);
         }
         function onUp(ev) {
           if (ev.pointerId !== pid) return;

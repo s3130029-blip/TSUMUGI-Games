@@ -57,6 +57,7 @@ var Game = (function () {
     Render.renderStack(state.stack);
     Render.setHint(state.order.length);
     Render.resetCustomer();   // 客の顔をふつうに戻す
+    fitBuilder(state.order.length); // 見本バーの高さ変化に合わせて積み場所を測り直す
   }
 
   // アイスを1つ積む（ドロップした位置から設置位置まで落ちてくる）
@@ -187,6 +188,7 @@ var Game = (function () {
     Render.setOrder([]);     // 'wrong' の色分けを無効化
     Render.renderOrder([]);  // 見本をクリア（自由モードでは非表示）
     Render.renderStack(state.stack);
+    fitBuilder(FREE_CAP);    // 自由モードは上限10段ぶんが収まる大きさに
   }
 
   // tap=true のUIボタンは押すと軽いタップ音を鳴らす
@@ -197,6 +199,31 @@ var Game = (function () {
       if (tap) Sound.tap();
       fn(e);
     });
+  }
+
+  // 積み場所(stage)の大きさに合わせてアイスを自動リサイズする。
+  // これで iPhone など狭い画面でも、最大段数のタワーが必ず収まる
+  // （CSS変数 --scoop をアイス・コーン・ゴーストが共有して追従する）。
+  var MAX_SCOOPS = 10;        // 収めたい最大段数（自由モードの上限 FREE_CAP に合わせる）
+  var fitCount = MAX_SCOOPS;  // 直近で「収めたい段数」。注文ごとに更新する
+  // n を渡すと「その段数が収まる大きさ」に。縦画面では注文が長いほど上部の見本バーが
+  // 高くなり積み場所が縮むので、注文ごとに測り直して必ず収める。引数なし（回転・
+  // リサイズ時）は直近の段数を使う。
+  function fitBuilder(n) {
+    if (typeof n === 'number' && n > 0) fitCount = Math.max(3, n); // 短い注文でも最低3段ぶんは確保
+    var stage = document.getElementById('stage');
+    if (!stage) return;
+    var h = stage.clientHeight, w = stage.clientWidth;
+    if (h <= 0 || w <= 0) return;
+    // タワー高さ ≈ S*(0.67*(n-1)+1) + コーン(約1.21S) = S*(0.67*n + 1.54)
+    var vFactor = 0.67 * fitCount + 1.54;
+    var size = Math.min(
+      84,                  // PC/iPad での上限（従来サイズ）
+      (h - 20) / vFactor,  // 縦に収める
+      (w - 16) / 1.1       // 横にもはみ出させない（コーン幅ぶん）
+    );
+    size = Math.max(38, size); // 小さくなりすぎ防止
+    document.documentElement.style.setProperty('--scoop', size + 'px');
   }
 
   // 音の ON/OFF ボタン。アイコンと見た目も切り替える。
@@ -226,6 +253,14 @@ var Game = (function () {
       bindClick('homeBtn', showPicker, true);
       bindClick('modeOrder', startOrderMode, true);
       bindClick('modeFree', startFreeMode, true);
+
+      // 画面サイズに合わせてアイスの大きさを調整（初回＋回転・リサイズ時）。
+      // iOS は回転直後にサイズが確定しないことがあるので、遅延でもう一度測る。
+      fitBuilder();
+      setTimeout(fitBuilder, 300);
+      window.addEventListener('resize', fitBuilder);
+      window.addEventListener('orientationchange', function () { setTimeout(fitBuilder, 200); });
+
       showPicker(); // 最初はモード選択から
     }
   };
