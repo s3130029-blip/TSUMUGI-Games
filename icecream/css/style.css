@@ -1,0 +1,411 @@
+/* ========== 基本・誤操作対策 ========== */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;                 /* ページスクロール抑制 */
+  overscroll-behavior: none;        /* 引っ張り更新・バウンス抑制 */
+  touch-action: none;               /* ピンチ拡大・ダブルタップズーム抑制 */
+  -webkit-user-select: none;        /* テキスト選択抑制 */
+  user-select: none;
+  -webkit-touch-callout: none;      /* 長押しメニュー抑制 */
+  -webkit-tap-highlight-color: transparent; /* タップ時の青ハイライト消し */
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Rounded Mplus 1c", sans-serif;
+  color: #5a3a2e;
+}
+
+body {
+  /* 店内イメージ（サーティワン風）を背景に。画像が無い/読込前は淡いピンクでフォールバック。
+     ・薄い白を1枚重ねて前景UIの文字を読みやすく（画像は明るいので軽め）
+     ・center bottom：下のカウンター付近に積み場所（コーン）が来るように
+     ・cover/fixed：縦横どちらでも画面いっぱい、スクロールでズレない */
+  background-color: #ffe1ec;
+  background-image:
+    linear-gradient(rgba(255,255,255,.14), rgba(255,255,255,.14)),
+    url(../assets/store_image.png);
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+.btn {
+  font: inherit;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  background: #ff8aa8;
+  color: #fff;
+  box-shadow: 0 4px 0 #e26a8a;
+  cursor: pointer;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #e26a8a; }
+.btn.solve { background: #ffb13d; box-shadow: 0 4px 0 #df8f1f; }
+.btn.big { font-size: 26px; padding: 16px 34px; background: #5ec8f0; box-shadow: 0 5px 0 #3aa6d0; }
+/* さいしょ（モード選択）へ戻る、控えめな小ボタン */
+.btn.home { background: #c9b8e8; box-shadow: 0 4px 0 #a892d0; padding: 10px 16px; font-size: 15px; }
+
+/* ========== 音の ON/OFF ボタン（右上・常に最前面） ========== */
+.sound-btn {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 3500;                 /* モード選択やお祝いカードより上で常に押せる */
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 3px 8px rgba(0,0,0,.18);
+  font-size: 26px;
+  line-height: 52px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+.sound-btn:active { transform: scale(.92); }
+.sound-btn.muted { opacity: .6; }
+
+/* ========== 入口（モード選択オーバーレイ） ========== */
+.mode-select {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: none;               /* 既定は非表示。body.picking のときだけ出す */
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  /* 入口も店内イメージで世界観を統一。白を少し濃いめに重ねてカードを目立たせる */
+  background-color: #ffe1ec;
+  background-image:
+    linear-gradient(rgba(255,255,255,.4), rgba(255,255,255,.4)),
+    url(../assets/store_image.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+body.picking .mode-select { display: flex; }
+
+.mode-card {
+  background: #fff;
+  border: 5px solid #ffd83d;
+  border-radius: 32px;
+  padding: 28px 32px 34px;
+  text-align: center;
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
+  max-width: 92vw;
+  animation: pop .35s ease-out;
+}
+.mode-logo  { font-size: 64px; line-height: 1; }
+.mode-title { font-size: 30px; font-weight: 800; color: #ff6f91; margin: 6px 0 2px; }
+.mode-lead  { font-size: 20px; font-weight: 700; color: #6b4a3a; margin: 0 0 18px; }
+.mode-buttons { display: flex; flex-direction: column; gap: 14px; }
+.mode-btn { font-size: 26px; padding: 18px 28px; background: #5ec8f0; box-shadow: 0 5px 0 #3aa6d0; }
+#modeFree { background: #8ec641; box-shadow: 0 5px 0 #6fa32d; }
+
+/* モードごとの表示出し分け（picking 中は両方出るが、オーバーレイで隠れる） */
+body.mode-order .free-only  { display: none; }
+body.mode-free  .order-only { display: none; }
+.free-title { font-size: 20px; font-weight: 800; color: #6fa32d; text-align: center; }
+
+/* ========== 全体レイアウト（横画面＝左右／縦画面＝上下） ========== */
+.game {
+  display: flex;
+  flex-direction: row;   /* 横画面：注文を左サイドに */
+  height: 100%;
+}
+
+/* --- 注文サイド（横画面では左、縦画面では上） --- */
+.sidebar {
+  flex: none;
+  width: clamp(210px, 28vw, 330px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  /* 背景画像の上でも文字が読めるよう、白を少し濃いめに */
+  background: rgba(255,255,255,.62);
+  border-right: 3px solid #ffd1dd;
+}
+.customer {
+  position: relative;        /* 浮かぶリアクション絵文字の基準 */
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.customer-face { font-size: 40px; line-height: 1; }
+/* クリア時：客の顔がぴょこんと弾む */
+.customer-face.react { animation: faceBounce .6s ease; }
+@keyframes faceBounce {
+  0%, 100% { transform: translateY(0)   scale(1);    }
+  30%      { transform: translateY(-9px) scale(1.18); }
+  60%      { transform: translateY(0)   scale(1.05); }
+}
+/* クリア時：客のまわりにハート／星がふわっと浮かぶ */
+.react-emoji {
+  position: absolute;
+  left: 10px;
+  top: 6px;
+  font-size: 22px;
+  pointer-events: none;
+  animation: floatUp 1.1s ease-out forwards;
+}
+@keyframes floatUp {
+  0%   { transform: translate(0, 0) scale(.5);              opacity: 0; }
+  25%  { opacity: 1; }
+  100% { transform: translate(var(--rx, 0), -64px) scale(1.15); opacity: 0; }
+}
+.bubble {
+  flex: 1;
+  background: #fff;
+  border: 3px solid #ffd1dd;
+  border-radius: 18px;
+  padding: 10px 14px 12px;
+  box-shadow: 0 3px 6px rgba(0,0,0,.08);
+}
+.bubble-title { font-size: 16px; font-weight: 700; color: #ff6f91; margin-bottom: 6px; text-align: center; }
+
+/* 見本（コーン付き・大きめ） */
+.sample { display: flex; flex-direction: column; align-items: center; }
+.sample-stack { display: flex; flex-direction: column-reverse; align-items: center; }
+.sample-cone {
+  width: 50px;
+  height: 62px;
+  margin-top: -8px;
+  background-color: #e0a96d;
+  background-image:
+    repeating-linear-gradient( 60deg, rgba(120,72,30,.35) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(-60deg, rgba(120,72,30,.35) 0 2px, transparent 2px 9px);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
+.hud {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+.score { font-size: 26px; font-weight: 800; color: #ff9f43; text-align: center; }
+.hint  { font-size: 20px; font-weight: 700; color: #4cb3dd; text-align: center; min-height: 24px; }
+/* コンボ表示（2連続以上のときだけ文字が入る） */
+.combo { font-size: 18px; font-weight: 800; color: #ff6f43; text-align: center; min-height: 22px; }
+.combo.pulse { animation: comboPulse .45s ease; }
+@keyframes comboPulse {
+  0%   { transform: scale(.5); opacity: .2; }
+  60%  { transform: scale(1.25); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* --- 遊ぶ側（積む場所＋パレット） --- */
+.play {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.stage {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding-bottom: 6px;
+  /* 積んだアイスが店内画像に埋もれないよう、積む場所に白いフィルターを敷く。
+     中央〜下（コーン＆スタックがある所）を明るく、外側は店内が薄く透ける
+     スポットライト状にして、アイスをはっきり見せつつ世界観も残す。 */
+  background:
+    radial-gradient(130% 105% at 50% 82%,
+      rgba(255,255,255,.82) 0%,
+      rgba(255,255,255,.62) 52%,
+      rgba(255,255,255,.18) 100%);
+}
+.builder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+.stack {
+  display: flex;
+  flex-direction: column-reverse; /* 最後に置いたアイスが上に乗る */
+  align-items: center;
+}
+.cone {
+  width: 92px;
+  height: 116px;
+  margin-top: -14px;                /* 一番下のアイスにめり込ませる */
+  z-index: 0;
+  background-color: #e0a96d;
+  background-image:
+    repeating-linear-gradient( 60deg, rgba(120,72,30,.35) 0 2px, transparent 2px 14px),
+    repeating-linear-gradient(-60deg, rgba(120,72,30,.35) 0 2px, transparent 2px 14px);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+
+/* ========== アイス（スクープ） ========== */
+.scoop {
+  width: 84px;
+  height: 84px;
+  border-radius: 50% 50% 46% 46%;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset 8px 8px 0 rgba(255,255,255,.35),
+              inset -6px -8px 0 rgba(0,0,0,.10),
+              0 2px 4px rgba(0,0,0,.12);
+}
+.stack .scoop { margin-top: -28px; }
+.stack .scoop:last-child { margin-top: 0; } /* column-reverse の最後＝一番下 */
+
+/* 見本のアイス（大きめ） */
+.sample .scoop.small {
+  width: 48px;
+  height: 48px;
+  box-shadow: inset 5px 5px 0 rgba(255,255,255,.35), inset -4px -5px 0 rgba(0,0,0,.10);
+}
+.sample-stack .scoop.small { margin-top: -16px; }
+.sample-stack .scoop.small:last-child { margin-top: 0; }
+
+/* 見本と違う位置のアイス（やさしい気づき） */
+.scoop.wrong { outline: 4px dashed #ff5d6c; outline-offset: -2px; }
+
+/* 上から落ちてくるアニメ（こたえ表示など、ドロップ位置が無いとき用） */
+.scoop.dropping { animation: dropIn .42s cubic-bezier(.34, 1.2, .64, 1); }
+@keyframes dropIn {
+  0%   { transform: translateY(-280px); opacity: .35; }
+  70%  { transform: translateY(10px);   opacity: 1; }
+  100% { transform: translateY(0); }
+}
+
+/* ドロップした位置から設置位置まで落とすアニメ（手で置いたとき） */
+/* 開始オフセット（--drop-dx / --drop-dy）は JS が実位置から計算して渡す */
+.scoop.drop-from { animation: dropFrom .3s cubic-bezier(.34, 1.1, .64, 1); }
+@keyframes dropFrom {
+  from { transform: translate(var(--drop-dx, 0), var(--drop-dy, 0)); opacity: .6; }
+  to   { transform: translate(0, 0); opacity: 1; }
+}
+
+/* ドラッグ中に指を追う影 */
+.scoop.ghost {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 1000;
+  opacity: .92;
+}
+
+/* ========== 味のパレット ========== */
+.palette {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 6px 12px;
+  padding: 8px 10px 12px;
+  /* パレットも背景画像の上で味ラベルが読めるよう白を濃いめに */
+  background: rgba(255,255,255,.66);
+  border-top: 3px solid #ffd1dd;
+}
+.palette-item {
+  font: inherit;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  cursor: pointer;
+}
+.palette-scoop { width: 58px; height: 58px; margin: 0; }
+.palette-item:active .palette-scoop { transform: scale(.92); }
+.palette-label { font-size: 12px; font-weight: 700; color: #6b4a3a; }
+
+/* ========== クリア演出 ========== */
+.fx {
+  position: fixed;
+  inset: 0;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2000;
+}
+.fx.show { display: block; }
+
+.confetti {
+  position: absolute;
+  top: -24px;
+  width: 12px;
+  height: 18px;
+  border-radius: 2px;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+
+.win-card {
+  pointer-events: auto;
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 5px solid #ffd83d;
+  border-radius: 28px;
+  padding: 24px 36px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+  animation: pop .35s ease-out;
+}
+@keyframes pop {
+  0%   { transform: translate(-50%,-50%) scale(.4); opacity: 0; }
+  100% { transform: translate(-50%,-50%) scale(1);  opacity: 1; }
+}
+.win-title { font-size: 40px; font-weight: 800; color: #ff6f91; }
+.win-stars { font-size: 32px; letter-spacing: 6px; margin: 8px 0 2px; animation: starsPop .5s ease-out .1s both; }
+@keyframes starsPop {
+  0%   { transform: scale(.3); opacity: 0; }
+  70%  { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.win-sub   { font-size: 22px; margin: 6px 0 12px; color: #6b4a3a; }
+.win-combo { font-size: 24px; font-weight: 800; color: #ff6f43; margin: 0 0 16px; animation: comboPulse .5s ease .2s both; }
+
+/* ========== 不一致のシェイク ========== */
+.shake { animation: shake .4s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(9px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+/* ========== 縦画面：注文を上部にまわす ========== */
+@media (orientation: portrait) {
+  .game { flex-direction: column; }
+  .sidebar {
+    width: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-right: none;
+    border-bottom: 3px solid #ffd1dd;
+    padding-right: 68px;   /* 右上の音ボタンと重ならないよう余白を確保 */
+  }
+  .hud { flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .score, .hint { min-height: 0; }
+}
+
+/* ========== 低い画面（横画面の小さめ端末）の微調整 ========== */
+@media (max-height: 560px) {
+  .scoop { width: 66px; height: 66px; }
+  .stack .scoop { margin-top: -22px; }
+  .cone { width: 78px; height: 96px; }
+  .palette-scoop { width: 50px; height: 50px; }
+}

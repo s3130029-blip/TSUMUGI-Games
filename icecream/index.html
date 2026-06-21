@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- 誤操作対策：ピンチ拡大・ダブルタップズームを抑制 -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- iOS でフルスクリーンっぽく見せる（ホーム画面追加時） -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>アイスクリームやさん</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="picking">
+  <div class="game">
+    <!-- 横画面では左サイド／縦画面では上部：お客さんの注文（見本）とスコア -->
+    <aside class="sidebar">
+      <div class="customer order-only">
+        <div class="customer-face" aria-hidden="true">🧒</div>
+        <div class="bubble">
+          <div class="bubble-title">これ ちょうだい！</div>
+          <!-- 見本（コーン付き） -->
+          <div id="orderSample" class="sample">
+            <div class="sample-stack"></div>
+            <div class="sample-cone" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+      <div class="hud">
+        <div class="score order-only">⭐ <span id="score">0</span></div>
+        <div id="combo" class="combo order-only" aria-hidden="true"></div>
+        <div id="hint" class="hint order-only"></div>
+        <div class="free-title free-only">🎨 すきに つくってね！</div>
+        <button id="solveBtn" class="btn solve order-only" type="button">こたえを みる</button>
+        <button id="doneBtn" class="btn big free-only" type="button">できた！ 🎉</button>
+        <button id="resetBtn" class="btn" type="button">やりなおし</button>
+        <button id="homeBtn" class="btn home" type="button">← さいしょ</button>
+      </div>
+    </aside>
+
+    <!-- 右側／下側：積み上げる場所とパレット -->
+    <section class="play">
+      <!-- アイスを積み上げる場所 -->
+      <main id="stage" class="stage">
+        <div id="builder" class="builder">
+          <div id="stack" class="stack"></div>
+          <div class="cone" aria-hidden="true"></div>
+        </div>
+      </main>
+
+      <!-- 味のパレット（ドラッグ元） -->
+      <footer id="palette" class="palette"></footer>
+    </section>
+  </div>
+
+  <!-- 音の ON/OFF（いつでも切り替え・右上） -->
+  <button id="soundBtn" class="sound-btn" type="button" aria-label="おとの オン・オフ">🔊</button>
+
+  <!-- 入口：あそびかた を えらぶ（起動時に表示） -->
+  <div id="modeSelect" class="mode-select">
+    <div class="mode-card">
+      <div class="mode-logo" aria-hidden="true">🍦</div>
+      <h1 class="mode-title">アイスクリームやさん</h1>
+      <p class="mode-lead">どっちで あそぶ？</p>
+      <div class="mode-buttons">
+        <button id="modeOrder" class="btn mode-btn" type="button">🧒 おちゅうもん</button>
+        <button id="modeFree" class="btn mode-btn" type="button">🎨 じゆうに つくる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- クリア演出用のオーバーレイ -->
+  <div id="fx" class="fx" aria-hidden="true"></div>
+
+  <!-- 読み込み順：データ → 生成 → 描画 → 演出 → 音 → 入力 → 本体 -->
+  <script src="js/data/flavors.js"></script>
+  <script src="js/order.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
