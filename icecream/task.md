@@ -48,6 +48,7 @@
 
 ## ステップ 7：調整・デザイン・その他（順次）
 - [x] 【バグ修正】ドラッグ中の中断（多指タッチ／ジェスチャ横取り／アプリ切替）でゴーストが画面に残り続ける不具合を修正（`js/input.js`）。終了/中断を window で受け、`pointercancel`・blur・visibilitychange でも片付け、新ドラッグ開始時に前回を強制終了＋`removeAllGhosts` で全消し
+- [x] 【バグ修正】画面切り替え時に変に拡大（右上にズーム）し、ピンチアウトで戻せなくなる不具合を修正。原因は `touch-action:none` が継承されず内側要素で拡大が発動していたこと。`css/style.css` で `*` に `touch-action:none` を付与＋`js/input.js` で iOS の `gesturestart`/`gesturechange`/`gestureend` を `preventDefault`（ピンチ拡大の二重抑止）
 - [ ] 実機（iPad/Safari）で操作感を確認し、ドラッグ判定・スクロール/ズーム誤動作を調整 ← **最優先**
 - [ ] スタック／見本のアイスの重なり量を実機を見て微調整
 - [x] 難易度カーブ（`js/main.js` の `DIFFICULTY` 表）

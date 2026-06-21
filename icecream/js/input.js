@@ -117,6 +117,12 @@ var Input = (function () {
       bindStack(Render.stackEl());
       // 長押しメニュー抑制（CSSと二重の保険）
       document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+      // iOS Safari の2本指ピンチ拡大を抑止（touch-action を無視する端末向けの保険）。
+      // gesturestart を止めるとズーム自体が始まらないので、画面切り替え時に
+      // 変な拡大状態へ入って戻せなくなる不具合を防げる。{passive:false} 必須。
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (name) {
+        document.addEventListener(name, function (e) { e.preventDefault(); }, { passive: false });
+      });
     }
   };
 })();

@@ -1,5 +1,9 @@
 /* ========== 基本・誤操作対策 ========== */
-* { box-sizing: border-box; }
+/* touch-action は継承されないので全要素に指定する。
+   html,body だけだと内側のボタン・パレット・ステージ・モード選択カード等は
+   touch-action:auto のままになり、画面切り替え時にそこでダブルタップ拡大／
+   ピンチ拡大が発動 →（user-scalable=no で）ピンチアウトで戻せなくなる不具合の原因。 */
+* { box-sizing: border-box; touch-action: none; }
 
 html, body {
   margin: 0;
