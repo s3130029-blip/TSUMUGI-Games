@@ -6,6 +6,7 @@ var Input = (function () {
   var onPlace = null;        // 置いたとき
   var onRemove = null;       // 外すとき
   var GHOST_HALF = 42;       // ゴーストの半径ぶん（中心を指に合わせる）
+  var activeCleanup = null;  // 進行中ドラッグの後始末関数（中断時に強制実行して取り残しを防ぐ）
 
   function makeGhost(flavor, x, y) {
     ghost = document.createElement('div');
@@ -19,6 +20,14 @@ var Input = (function () {
   }
   function killGhost() {
     if (ghost) { ghost.remove(); ghost = null; }
+  }
+  // 取りこぼした影も含めて、画面上のゴーストを全部消す（多指タッチ等の保険）
+  function removeAllGhosts() {
+    var gs = document.querySelectorAll('.scoop.ghost');
+    for (var i = 0; i < gs.length; i++) {
+      if (gs[i].parentNode) gs[i].parentNode.removeChild(gs[i]);
+    }
+    ghost = null;
   }
 
   // 子供向けに判定を広めにする。とくに「上に積む」動きに合わせて上方向を広く取る。
@@ -38,29 +47,51 @@ var Input = (function () {
         var flavor = getFlavor(item.dataset.flavor);
         if (!flavor) return;
 
-        try { item.setPointerCapture(e.pointerId); } catch (_) {}
+        // 直前のドラッグが残っていたら強制終了（多指タッチや中断でゴーストが残るのを防ぐ）
+        if (activeCleanup) activeCleanup();
+
+        var pid = e.pointerId;
+        try { item.setPointerCapture(pid); } catch (_) {}
+        removeAllGhosts(); // 念のため残骸を掃除してから始める
         makeGhost(flavor, e.clientX - GHOST_HALF, e.clientY - GHOST_HALF);
 
-        function move(ev) { moveGhost(ev.clientX - GHOST_HALF, ev.clientY - GHOST_HALF); }
-        function end(ev) {
-          item.removeEventListener('pointermove', move);
-          item.removeEventListener('pointerup', end);
-          item.removeEventListener('pointercancel', cancel);
-          var dropped = inDropZone(ev.clientX, ev.clientY);
-          killGhost();
-          // ドロップした位置を渡し、その位置から設置位置まで落とす
-          if (dropped && onPlace) onPlace(flavor.id, { x: ev.clientX, y: ev.clientY });
+        function move(ev) {
+          if (ev.pointerId !== pid) return; // 別の指は無視
+          moveGhost(ev.clientX - GHOST_HALF, ev.clientY - GHOST_HALF);
         }
-        function cancel() {
-          item.removeEventListener('pointermove', move);
-          item.removeEventListener('pointerup', end);
-          item.removeEventListener('pointercancel', cancel);
+        function onUp(ev) {
+          if (ev.pointerId !== pid) return;
+          var x = ev.clientX, y = ev.clientY; // 片付け前に位置を控える
+          cleanup();
+          // ドロップした位置を渡し、その位置から設置位置まで落とす
+          if (inDropZone(x, y) && onPlace) onPlace(flavor.id, { x: x, y: y });
+        }
+        function onCancel(ev) {
+          if (ev.pointerId !== pid) return;
+          cleanup(); // 置かずに片付けるだけ（ジェスチャ横取り・パームリジェクト等）
+        }
+        function onInterrupt() { cleanup(); }                 // アプリが裏に回った等
+        function onVis() { if (document.hidden) cleanup(); }
+
+        function cleanup() {
+          window.removeEventListener('pointermove', move);
+          window.removeEventListener('pointerup', onUp);
+          window.removeEventListener('pointercancel', onCancel);
+          window.removeEventListener('blur', onInterrupt);
+          document.removeEventListener('visibilitychange', onVis);
+          try { item.releasePointerCapture(pid); } catch (_) {}
           killGhost();
+          removeAllGhosts(); // 取りこぼした残骸も最終確認で掃除
+          activeCleanup = null;
         }
 
-        item.addEventListener('pointermove', move);
-        item.addEventListener('pointerup', end);
-        item.addEventListener('pointercancel', cancel);
+        // window で受けると、指が要素外へ出ても・キャプチャが外れても確実に拾える
+        window.addEventListener('pointermove', move);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onCancel);
+        window.addEventListener('blur', onInterrupt);
+        document.addEventListener('visibilitychange', onVis);
+        activeCleanup = cleanup;
       });
     });
   }

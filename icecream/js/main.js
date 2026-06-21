@@ -1,10 +1,27 @@
 // 本体。状態を持ち、各モジュール（生成・描画・入力・演出）を組み立てる。
 var Game = (function () {
-  // --- 難易度の設定（ここだけ変えれば調整できる） ---
-  var START_LEN = 3;  // 最初の段数
-  var MIN_LEN   = 3;  // 注文の最小段数
-  var MAX_CAP   = 6;  // 注文モードの段数上限（子供向けに当面6で抑える）
-  var FREE_CAP  = 10; // 自由モードの段数上限（要件の最大10段まで好きに積める）
+  // --- 難易度カーブ（ここだけ変えれば調整できる） ---
+  // クリア数が増えるほど「段数(min〜max)」と「使う味の数(variety)」が段階的に上がる。
+  // until: このクリア数になるまで（未満の間）この段階を使う。最後の段階が以降ずっと続く。
+  // 子供向けに最初はやさしく（3段・3色）、ゆっくり上げて 最大8段・8色 まで。
+  // ※もっと難しくするなら数値を上げる／段階を足す（最大10段・10色まで可能）。
+  var DIFFICULTY = [
+    { until: 2,        min: 3, max: 3, variety: 3 }, // はじめ：3段・3色
+    { until: 4,        min: 3, max: 4, variety: 4 },
+    { until: 6,        min: 4, max: 5, variety: 5 },
+    { until: 9,        min: 4, max: 6, variety: 6 },
+    { until: 12,       min: 5, max: 7, variety: 7 },
+    { until: Infinity, min: 6, max: 8, variety: 8 }  // 慣れたら：6〜8段・8色
+  ];
+  var FREE_CAP = 10; // 自由モードの段数上限（要件の最大10段まで好きに積める）
+
+  // 今のクリア数に応じた難易度（段階）を返す
+  function difficultyFor(cleared) {
+    for (var i = 0; i < DIFFICULTY.length; i++) {
+      if (cleared < DIFFICULTY[i].until) return DIFFICULTY[i];
+    }
+    return DIFFICULTY[DIFFICULTY.length - 1];
+  }
   // ---------------------------------------------------
 
   var state = {
@@ -26,10 +43,10 @@ var Game = (function () {
     help:    { title: 'できた！ 🍦',  sub: 'つぎは じぶんで やってみよう！' }
   };
 
-  // 次の注文を作る。クリア数に応じて少しずつ段数を増やす。
+  // 次の注文を作る。クリア数に応じて段数と味の数を段階的に増やす。
   function nextOrder() {
-    var maxLen = Math.min(START_LEN + Math.floor(state.cleared / 2), MAX_CAP);
-    state.order = Order.generate(MIN_LEN, maxLen, state.prevSig);
+    var d = difficultyFor(state.cleared);
+    state.order = Order.generate(d.min, d.max, d.variety, state.prevSig);
     state.prevSig = state.order.join(',');
     state.stack = [];
     state.mistakes = 0;       // 注文ごとに評価用カウンタをリセット

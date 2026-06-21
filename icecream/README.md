@@ -40,5 +40,5 @@ icecream/
 
 ## カスタマイズ
 - **アイスを増やす**：`js/data/flavors.js` の配列に1行足すだけ。
-- **段数を変える**：`js/main.js` 上部の `START_LEN` / `MIN_LEN` / `MAX_CAP`。
+- **難易度を変える**：`js/main.js` 上部の `DIFFICULTY` 表（クリア数ごとの段数 `min`〜`max` と 使う味の数 `variety`）。段階を足したり数値を上げたりで調整（最大10段・10色まで）。自由モードの上限は `FREE_CAP`。
 - **置きやすさを変える**：`js/input.js` の `pad`（ドロップ判定の広さ）。
