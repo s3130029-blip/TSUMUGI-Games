@@ -60,8 +60,10 @@ body {
 /* ========== 音の ON/OFF ボタン（右上・常に最前面） ========== */
 .sound-btn {
   position: fixed;
-  top: 10px;
-  right: 10px;
+  /* iPhone のノッチ／Dynamic Island やホームインジケータと重ならないよう、
+     セーフエリア分を確保（env は対応端末以外では 0 なので iPad/PC は従来どおり 10px）。 */
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
   z-index: 3500;                 /* モード選択やお祝いカードより上で常に押せる */
   width: 52px;
   height: 52px;
@@ -86,7 +88,12 @@ body {
   display: none;               /* 既定は非表示。body.picking のときだけ出す */
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  /* セーフエリア分の余白を最低 20px と一緒に確保（ノッチ下にカードが潜らない） */
+  padding:
+    max(20px, env(safe-area-inset-top))
+    max(20px, env(safe-area-inset-right))
+    max(20px, env(safe-area-inset-bottom))
+    max(20px, env(safe-area-inset-left));
   /* 入口も店内イメージで世界観を統一。白を少し濃いめに重ねてカードを目立たせる */
   background-color: #ffe1ec;
   background-image:
@@ -135,7 +142,9 @@ body.mode-free  .order-only { display: none; }
   flex-direction: column;
   justify-content: space-between;
   gap: 10px;
-  padding: 12px;
+  /* 上・左はセーフエリア分を確保（横画面で左サイドがノッチに潜らない／縦画面では上の
+     Dynamic Island を避ける）。env 非対応端末では 12px のまま。 */
+  padding: max(12px, env(safe-area-inset-top)) 12px 12px max(12px, env(safe-area-inset-left));
   /* 背景画像の上でも文字が読めるよう、白を少し濃いめに */
   background: rgba(255,255,255,.62);
   border-right: 3px solid #ffd1dd;
@@ -315,7 +324,12 @@ body.mode-free  .order-only { display: none; }
   align-content: center;
   justify-content: center;
   gap: 6px 12px;
-  padding: 8px 10px 12px;
+  /* 下はホームインジケータ分、左右は横画面ノッチ分のセーフエリアを確保 */
+  padding:
+    8px
+    max(10px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(10px, env(safe-area-inset-left));
   /* パレットも背景画像の上で味ラベルが読めるよう白を濃いめに */
   background: rgba(255,255,255,.66);
   border-top: 3px solid #ffd1dd;
@@ -427,7 +441,49 @@ body.mode-free  .order-only { display: none; }
 @media (orientation: portrait) and (max-width: 600px) {
   .palette-scoop { width: 44px; height: 44px; }
   .palette-label { font-size: 11px; }
-  .palette { gap: 4px 8px; padding: 6px 8px 8px; }
+  /* 余白は詰めつつ、下のホームインジケータ分（セーフエリア）は残す */
+  .palette {
+    gap: 4px 8px;
+    padding:
+      6px
+      max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom))
+      max(8px, env(safe-area-inset-left));
+  }
+}
+
+/* ========== iPhone など縦持ちスマホ（狭幅）：上部バーを2段にして見やすく ==========
+   タブレット縦（幅600〜768）は従来どおり1行。スマホ幅(≤480)だけ、
+   1段目＝お客さん＋見本／2段目＝スコア・操作ボタン に分けて、横詰まりと
+   ボタンの折り返しの乱れを解消する（指のタップ目標 約44px は維持）。 */
+@media (orientation: portrait) and (max-width: 480px) {
+  .sidebar {
+    flex-wrap: wrap;          /* customer の下に hud を折り返す＝2段ヘッダー */
+    align-items: center;
+    gap: 8px;
+    padding: max(10px, env(safe-area-inset-top)) 12px 10px max(12px, env(safe-area-inset-left));
+  }
+  /* 1段目：お客さん＋吹き出し（見本）。右上の音ボタンに被らないよう右余白を確保 */
+  .customer { flex: 1 1 100%; gap: 8px; padding-right: 56px; }
+  .customer-face { font-size: 34px; }
+  .bubble { padding: 6px 12px 8px; }
+  .bubble-title { font-size: 14px; margin-bottom: 4px; }
+
+  /* 2段目：スコア・ヒント・操作ボタンを中央寄せで横一列に（音ボタンより下なので全幅OK） */
+  .hud {
+    flex: 1 1 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 10px;
+  }
+  .score { font-size: 22px; }
+  .hint  { font-size: 16px; min-height: 0; }
+  .combo { font-size: 15px; min-height: 0; }
+  /* ボタンは小さめでも指で押せる高さ（約44px）を確保 */
+  .hud .btn { padding: 10px 16px; font-size: 15px; min-height: 44px; }
+  .hud .btn.home { padding: 8px 14px; font-size: 13px; min-height: 40px; }
 }
 
 /* ========== 低い画面（横画面の小さめ端末）の微調整 ========== */
